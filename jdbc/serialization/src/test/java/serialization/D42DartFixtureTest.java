@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 // Java WO-1 reader value-for-value. Fixtures + sidecars under resources/d42 are
 // byte-identical copies of the Dart generator output (core/shared/ddt
 // test/serialization/d42_fixture_generator_test.dart; regeneration in the README).
+// Core keeps its own copy in data/formats/d42/dart; the two are not synced automatically.
 //
 // Each column's observed on-wire encoder id is asserted against the sidecar so a
 // ddt cost-model drift fails loudly; float64 is compared bit-exact, float32 at

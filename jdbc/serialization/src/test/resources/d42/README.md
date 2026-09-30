@@ -40,11 +40,14 @@ pub run test test/serialization/d42_fixture_generator_test.dart
 ```
 
 The generator (`core/shared/ddt/test/serialization/d42_fixture_generator_test.dart`) writes
-the `.d42` + `.expected.json` pairs straight into this directory, round-trips each fixture
+the `.d42` + `.expected.json` pairs into core's `data/formats/d42/dart` (copy them here), round-trips each fixture
 through the Dart reader (guarding against generator bugs), and asserts the natural family
 picks the intended encoder. Serialization is deterministic (metadata ids are pinned and the
 blob tail carries a minimal fixed JSON), so an unchanged format leaves the tree clean. A
-diff here after regeneration is the loud signal that the format or the ddt cost model moved
+diff in `data/formats/d42/dart` after regeneration is the loud signal that the format or the ddt cost model moved
 — review it, then re-run `D42DartFixtureTest`.
+
+Core keeps its own copies in `data/formats/d42/dart` (these) and `data/formats/d42/java` (the Java-written
+`d42-java` goldens); they are not synced with this repository automatically.
 
 Fixtures are kept under 100 KB each (they live in git).

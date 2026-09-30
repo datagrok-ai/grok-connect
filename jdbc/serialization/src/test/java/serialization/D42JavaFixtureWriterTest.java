@@ -17,7 +17,8 @@ import java.util.Random;
 // Java -> Dart golden fixtures: writes src/test/resources/d42-java/<case>.d42 with the
 // production writer (DataFrame.toByteArray, best int encoders) plus an .expected.json
 // sidecar in the resources/d42 shape; core/shared/ddt/test/serialization/
-// java_d42_fixture_test.dart decodes every fixture with the Dart reader. Each fixture is
+// java_d42_fixture_test.dart decodes core's copy of them (data/formats/d42/java, not synced
+// automatically) with the Dart reader. Each fixture is
 // also round-tripped through the Java reader here. Serialization is deterministic; the
 // committed goldens are compared byte-for-byte and only rewritten with -Dd42.regenerate=true.
 public class D42JavaFixtureWriterTest {
