@@ -35,19 +35,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [ 'connectors', 'packages', 'tools', 'js-api', 'libraries' ]
+        target: [ 'jdbc', 'adbc' ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up JDK 8
-        if: matrix.target == 'connectors'
+        if: matrix.target == 'jdbc'
         uses: actions/setup-java@v2
         with:
           java-version: '8'
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
-        if: matrix.target == 'connectors'
+        if: matrix.target == 'jdbc'
         working-directory: ./${{ matrix.target }}
         run: mvn -Dmaven.test.skip=true package
       - name: Create SBOM by Syft
