@@ -27,7 +27,12 @@
 ::        grok_connect.cmd shell -q examples\query.json
 ::
 @echo off
-set GROK_CONNECT_DIR=grok_connect
+setlocal
+if not defined GROK_SRC set "GROK_SRC=%~dp0..\..\core"
+for %%i in ("%GROK_SRC%") do set "GROK_SRC=%%~fi"
+cd /d "%~dp0"
+set "JDBC_DIR=%CD%"
+set GROK_CONNECT_DIR=server
 set TARGET_DIR=%GROK_CONNECT_DIR%\target
 
 if "%1" == "shell" (
@@ -47,16 +52,16 @@ if "%1" == "shell" (
 
     if "%1" == "test" (
         :: Get dart test dependencies
-        cd ..\ddt
+        cd /d "%GROK_SRC%\core\shared\ddt"
         call pub get
 
-        cd ..\grok_shared
+        cd /d "%GROK_SRC%\core\shared\grok_shared"
         call pub get
 
-        cd ..\ddt\bin\serialization_test
+        cd /d "%GROK_SRC%\core\shared\ddt\bin\serialization_test"
         call pub get
 
-        cd ..\..\..\public\connectors
+        cd /d "%JDBC_DIR%"
 
         :: Build project
         call mvn package

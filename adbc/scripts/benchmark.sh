@@ -3,10 +3,6 @@
 # Compares TTFR and TTC across different table sizes and providers.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPO_ROOT="$(cd "$PROJECT_DIR/../../.." && pwd)"
-
 WARMUP_RUNS=3
 MEASURED_RUNS=5
 JAVA_PORT=1234
