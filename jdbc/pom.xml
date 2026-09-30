@@ -20,7 +20,7 @@
     </properties>
 
     <modules>
-        <module>grok_connect</module>
+        <module>server</module>
         <module>serialization</module>
     </modules>
 
