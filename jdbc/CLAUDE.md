@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **GrokConnect** is a Java-based REST API server that bridges the Datagrok data analytics platform with 30+ databases and data sources. It handles database connections, schema introspection, query execution, and efficient binary data serialization.
 
-**Location:** `public/connectors`
+**Location:** `grok-connect/jdbc`
 
 ## Common Commands
 
@@ -33,10 +33,10 @@ grok_connect.cmd         # Windows
 # Start REST server (port 1234, 4GB heap). Keep the jar FIRST on the classpath: with lib/* first,
 # an SLF4J 1.x bundled in a driver jar shadows the shaded 2.x and GrokConnect.<clinit> crashes
 # (grok_connect.cmd / .sh and the Dockerfile all put the jar first).
-java -Xmx4g -classpath "grok_connect/target/grok_connect.jar:grok_connect/lib/*" grok_connect.GrokConnect
+java -Xmx4g -classpath "$(ls server/target/grok_connect-*.jar):server/lib/*" grok_connect.GrokConnect
 
 # Shell mode (CLI for testing queries)
-java -classpath "grok_connect/target/grok_connect.jar:grok_connect/lib/*" grok_connect.GrokConnectShell
+java -classpath "$(ls server/target/grok_connect-*.jar):server/lib/*" grok_connect.GrokConnectShell
 ```
 
 ### Testing
@@ -49,7 +49,7 @@ Use `/test-connectors` to run tests. Targeted suites that need no Docker:
   intentional writer change — then run the Dart side,
   `cd core/shared/ddt && pub run test test/serialization/java_d42_fixture_test.dart`) and the
   Dart → Java goldens (`D42DartFixtureTest`).
-- `mvn -pl grok_connect test -Dtest='SessionHandler*,GzipFrameTest,FastReadTest,QueryManagerTest'` —
+- `mvn -pl server test -Dtest='SessionHandler*,GzipFrameTest,FastReadTest,QueryManagerTest'` —
   `SessionHandlerGzipChunkTest` drives the real `SessionHandler` state machine against a
   file-backed SQLite database (its driver ships with grok_connect; `SQLiteDataProvider` is put
   into `ProviderManager` and the static pool is set by reflection) with a mocked Jetty `Session`
@@ -92,8 +92,8 @@ JdbcDataProvider extends DataProvider
 ### Two-Module Structure
 
 ```
-connectors/
-├── grok_connect/       # Main REST server application
+jdbc/
+├── server/             # Main REST server application
 │   ├── src/main/java/
 │   │   ├── grok_connect/
 │   │   │   ├── GrokConnect.java         # Main entry point, Spark routes
@@ -357,7 +357,7 @@ no reader needs them (every id was already decoded everywhere, `core/docs/D42_BI
 ## Directory Structure
 
 ```
-grok_connect/src/main/java/grok_connect/
+server/src/main/java/grok_connect/
 ├── GrokConnect.java              # Main class, REST routes
 ├── GrokConnectShell.java         # CLI mode
 ├── connectors_info/              # Data models
@@ -490,7 +490,7 @@ public class PostgresDataProviderTest {
 ## Configuration Files
 
 - `pom.xml` - Parent Maven configuration
-- `grok_connect/pom.xml` - Main module dependencies
+- `server/pom.xml` - Main module dependencies
 - `serialization/pom.xml` - Serialization module
 - `Dockerfile` - Container build definition
 - `grok_connect.sh` / `grok_connect.cmd` - Build/run scripts
@@ -556,7 +556,7 @@ Default settings (can be overridden):
   the Docker image runs on `datagrok/openjdk:8`. The shade config drops `META-INF/versions/**`,
   so it must also drop every service entry that points at a multi-release class — dnsjava's
   `META-INF/services/java.net.spi.InetAddressResolverProvider` is excluded for that reason
-  (`grok_connect/pom.xml`); with it present, JDK 18+ fails every `InetAddress` lookup
+  (`server/pom.xml`); with it present, JDK 18+ fails every `InetAddress` lookup
   (`ServiceConfigurationError`) and every JDBC connect times out (~30 s, pool `total=0`).
 - Two image flavors from one codebase: `datagrok/grok_connect` (main) and `datagrok/grok_connect_extended`
   (opt-in; ships only the CVE-quarantined drivers — Amazon Neptune 3.0.3, Cloudera Impala). The `FLAVOR`

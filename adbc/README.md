@@ -2,7 +2,7 @@
 
 A Rust implementation of the Grok Connect protocol built on [ADBC](https://arrow.apache.org/adbc/)
 (Arrow Database Connectivity). It serves the same REST/WebSocket endpoints as the Java
-[grok_connect](../connectors/README.md), so the platform routes queries to it transparently —
+[grok_connect](../jdbc/README.md), so the platform routes queries to it transparently —
 by default it is registered as an additional endpoint alongside the Java one, and each
 provider type is served by exactly one endpoint.
 

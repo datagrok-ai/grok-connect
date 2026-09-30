@@ -1,7 +1,7 @@
 # Datagrok database connectors
 
 Out of the box, the platform comes with the data connectors
-for [30+ popular databases](../help/access/supported-connectors.md), and the list is constantly growing.
+for [30+ popular databases](https://datagrok.ai/help/access/databases/connectors/), and the list is constantly growing.
 In addition to that, it is possible to develop your own data connectors, and seamlessly integrate them
 into the platform.
 
@@ -23,13 +23,13 @@ gets accepted by a server, and then routed to the corresponding database connect
 ## How to add a new database connector
 
 1. Create
-   a [DataProvider](https://github.com/datagrok-ai/public/blob/5c9a8df6b7f1494ae5f666bd2aaf5c6d55bc4dee/connectors/grok_connect/src/main/java/grok_connect/providers/JdbcDataProvider.java)
+   a [DataProvider](server/src/main/java/grok_connect/connectors_info/DataProvider.java)
    subclass. If you are adding a JDBC provider, subclass it from the
-   [JdbcDataProvider](https://github.com/datagrok-ai/public/blob/5c9a8df6b7f1494ae5f666bd2aaf5c6d55bc4dee/connectors/grok_connect/src/main/java/grok_connect/providers/JdbcDataProvider.java)
+   [JdbcDataProvider](server/src/main/java/grok_connect/providers/JdbcDataProvider.java)
    .
 
 2. Then, override the required methods depending on the specifics of the database/provider.
-3. Add it to the `Providers` list (list of supported providers) in the `connectors_info/DataProvider.java`.
+3. Add its class name to `PROVIDER_CLASSES` (list of supported providers) in [`utils/ProviderManager.java`](server/src/main/java/grok_connect/utils/ProviderManager.java).
 
 ## How to test a database connector
 
@@ -37,11 +37,11 @@ You have two options for testing your database connector:
 
 Test with `GrokConnectShell`:
 
-1. Open `connectors/examples/query.json`(or use another file which you will need to use in below configuration) and set
+1. Open `examples/query.json`(or use another file which you will need to use in below configuration) and set
    the query information: set the query itself, datasource equal to `descriptor.type` in your provider, credentials to
    server and server address, port, and db name.
 2. Add next run configuration: `Application`, program arguments: `--q examples/query.json --o examples/output.csv` if
-   you want to save your output in the `connectors/examples/output.csv`, or `--q examples/query.json` if you want to
+   you want to save your output in the `examples/output.csv`, or `--q examples/query.json` if you want to
    print your output.
 3. Now you can run `GrokConnectShell.main()` with the added configuration and check the output.
 
