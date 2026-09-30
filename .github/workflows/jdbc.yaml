@@ -128,6 +128,11 @@ jobs:
           branch=$(echo ${GITHUB_REF#refs/heads/})
           echo "commit_sha=${commit_sha}" >> $GITHUB_OUTPUT
           echo "branch=${branch}" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF}" == "refs/heads/master" || "${GITHUB_REF}" == refs/heads/release/* ]]; then
+            echo "publishes=true" >> $GITHUB_OUTPUT
+          else
+            echo "publishes=false" >> $GITHUB_OUTPUT
+          fi
           if [[ ${{ steps.check.outputs.image_exists }} == 'true' ]]; then
             platform='linux/amd64'
             echo "platform=${platform}" >> $GITHUB_OUTPUT
@@ -139,7 +144,9 @@ jobs:
           else
             echo "platform=linux/amd64" >> $GITHUB_OUTPUT
             if [[ ${{ steps.check.outputs.latest }} == 'true' ]]; then
-              echo "cache_to=type=registry,ref=datagrok/${{ matrix.repo }}:cache,mode=max" >> $GITHUB_OUTPUT
+              if [[ "${GITHUB_REF}" == "refs/heads/master" || "${GITHUB_REF}" == refs/heads/release/* ]]; then
+                echo "cache_to=type=registry,ref=datagrok/${{ matrix.repo }}:cache,mode=max" >> $GITHUB_OUTPUT
+              fi
               echo "tags=datagrok/${{ matrix.repo }}:latest,datagrok/${{ matrix.repo }}:${{ needs.build.outputs.version }}" >> $GITHUB_OUTPUT
             else
               echo "tags=datagrok/${{ matrix.repo }}:${{ needs.build.outputs.version }}" >> $GITHUB_OUTPUT
@@ -214,7 +221,7 @@ jobs:
           emails: "ppolovyi@datagrok.ai"
       - name: Prepare Slack Message
         id: slack-prepare
-        if: steps.docker-artifact.outcome == 'skipped' && (steps.build-push.outcome == 'success' || steps.bleeding-edge.outcome == 'success')
+        if: steps.param.outputs.publishes == 'true' && (steps.build-push.outcome == 'success' || steps.bleeding-edge.outcome == 'success')
         shell: bash
         run: |
           if [[ "${{ steps.bleeding-edge.outcome == 'success' }}" == "true" ]]; then
