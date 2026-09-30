@@ -5,8 +5,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPO_ROOT="$(cd "$PROJECT_DIR/../../.." && pwd)"
-COMPOSE_FILE="$REPO_ROOT/public/docker/localhost.bleeding-edge.docker-compose.yaml"
+PUBLIC_DIR="$(cd "${PUBLIC_DIR:-$PROJECT_DIR/../../public}" && pwd)"
+COMPOSE_FILE="$PUBLIC_DIR/docker/localhost.bleeding-edge.docker-compose.yaml"
 FAILED=0
 
 if [ ! -f "$COMPOSE_FILE" ]; then
@@ -46,7 +46,7 @@ default: localhost
 GROKCFG
 
 echo "Building and deploying Arrow package..."
-cd "$REPO_ROOT/public"
+cd "$PUBLIC_DIR"
 pnpm install --frozen-lockfile
 pnpm turbo run build --filter='{./packages/Arrow}...'
 cd packages/Arrow

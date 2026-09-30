@@ -32,11 +32,13 @@ DART_SDK="$(which dart)"
 DART_PUB=$(which pub)
 
 
-current_dir=$(pwd)
-GROK_SRC="${GROK_SRC:=$current_dir/../../}"
+GROK_SRC="${GROK_SRC:-$(dirname "$0")/../../core}"
+[ -d "$GROK_SRC" ] && GROK_SRC="$(cd "$GROK_SRC" && pwd)"
+cd "$(dirname "$0")"
+JDBC_DIR=$(pwd)
 
 # Base project directory and executable
-GROK_CONNECT_DIR=grok_connect
+GROK_CONNECT_DIR=server
 TARGET_DIR=${GROK_CONNECT_DIR}/target
 grok_connect_jar() { basename "$(ls ${TARGET_DIR}/grok_connect-*.jar | head -1)"; }
 
@@ -58,16 +60,16 @@ else
 
     if [ "$1" == "test" ]; then
         # Get dart test dependencies
-        cd $GROK_SRC/ddt
+        cd "$GROK_SRC/core/shared/ddt"
         ${DART_PUB} get
 
-        cd $GROK_SRC/grok_shared
+        cd "$GROK_SRC/core/shared/grok_shared"
         ${DART_PUB} get
 
-        cd $GROK_SRC/ddt/bin/serialization_test
+        cd "$GROK_SRC/core/shared/ddt/bin/serialization_test"
         ${DART_PUB} get
 
-        cd $GROK_SRC/public/connectors
+        cd "$JDBC_DIR"
 
         # Build project
         mvn package
@@ -77,7 +79,6 @@ else
     fi
 
     # Pack into zip
-    cd $GROK_SRC/public/connectors || exit 1
     GROK_CONNECT=$(grok_connect_jar)
     ZIP_TMP_DIR=${TARGET_DIR}/grok_connect
     mkdir ${ZIP_TMP_DIR}
