@@ -2,6 +2,7 @@
 
 # 2.8.5 (unreleased)
 
+* Query failures carry `errorType` (`user` | `internal`): database, network and cancellation errors are `user`, grok_connect's own failures (NPE, missing driver class, ...) are `internal`
 * GROK-20907: Databricks: Added optional Schema connection field
 * Fixed: Cassandra `FLOAT` and `TINYINT` columns failed with `CodecNotFoundException` — the typed fast reads ask the driver to widen to `Double`/`Integer`, which it refuses, so the provider now reads those through `getObject` and the converter chain
 * Streaming: typed JDBC fast reads (`getInt`/`getDouble`/`getString`/... instead of `getObject` + conversion for the common column types, `ResultSetManager.readFast`)
