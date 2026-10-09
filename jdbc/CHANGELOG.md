@@ -1,6 +1,6 @@
 # Grok Connect changelog
 
-# 2.8.5 (unreleased)
+# 2.8.5
 
 * Query failures carry `errorType` (`user` | `internal`): database, network and cancellation errors are `user`, grok_connect's own failures (NPE, missing driver class, ...) are `internal`
 * GROK-20907: Databricks: Added optional Schema connection field
