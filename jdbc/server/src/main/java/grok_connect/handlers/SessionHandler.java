@@ -3,6 +3,7 @@ package grok_connect.handlers;
 import grok_connect.connectors_info.DataQueryRunResult;
 import grok_connect.log.EventType;
 import grok_connect.providers.DatabricksProvider;
+import grok_connect.utils.ErrorClassifier;
 import grok_connect.utils.GrokConnectException;
 import grok_connect.utils.QueryChunkNotSent;
 import grok_connect.utils.QueryManager;
@@ -82,6 +83,7 @@ public class SessionHandler {
         DataQueryRunResult result = new DataQueryRunResult();
         result.errorMessage = message;
         result.errorStackTrace = stackTrace;
+        result.errorType = ErrorClassifier.errorType(err);
         session.getRemote().sendStringByFuture(String.format("ERROR: %s", GrokConnect.gson.toJson(result)));
         closeQueryManagerQuietly();
         session.close();

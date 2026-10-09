@@ -223,7 +223,7 @@ public class GrokConnect {
                 DataFrame dataFrame = provider.getForeignKeys(connection, connection.get("schema"));
                 buffer = packDataFrame(result, dataFrame);
             } catch (QueryCancelledByUser | GrokConnectException ex) {
-                buffer = packException(result, ex.getClass().equals(GrokConnectException.class)
+                buffer = packException(result, ex.getClass().equals(GrokConnectException.class) && ex.getCause() != null
                         ? (Exception) ex.getCause() : ex);
                 PARENT_LOGGER.info(DEFAULT_LOG_EXCEPTION_MESSAGE, ex);
             }
@@ -291,7 +291,7 @@ public class GrokConnect {
                 DataFrame dataFrame = provider.getComments(connection, connection.get("schema"));
                 buffer = packDataFrame(result, dataFrame);
             } catch (QueryCancelledByUser | GrokConnectException ex) {
-                buffer = packException(result, ex.getClass().equals(GrokConnectException.class)
+                buffer = packException(result, ex.getClass().equals(GrokConnectException.class) && ex.getCause() != null
                         ? (Exception) ex.getCause() : ex);
                 PARENT_LOGGER.info(DEFAULT_LOG_EXCEPTION_MESSAGE, ex);
             }
@@ -310,7 +310,7 @@ public class GrokConnect {
                 DataFrame dataFrame = provider.getSchema(connection, connection.get("schema"), connection.get("table"), includeKeyInfo);
                 buffer = packDataFrame(result, dataFrame);
             } catch (QueryCancelledByUser | GrokConnectException ex) {
-                buffer = packException(result, ex.getClass().equals(GrokConnectException.class)
+                buffer = packException(result, ex.getClass().equals(GrokConnectException.class) && ex.getCause() != null
                         ? (Exception) ex.getCause() : ex);
                 PARENT_LOGGER.info(DEFAULT_LOG_EXCEPTION_MESSAGE, ex);
             }
@@ -415,6 +415,7 @@ public class GrokConnect {
         Map<String, String> exception = printError(ex);
         result.errorMessage = exception.get("errorMessage");
         result.errorStackTrace = exception.get("errorStackTrace");
+        result.errorType = ErrorClassifier.errorType(ex);
         return new BufferAccessor();
     }
 

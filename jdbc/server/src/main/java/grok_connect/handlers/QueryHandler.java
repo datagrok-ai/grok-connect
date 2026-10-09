@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import grok_connect.GrokConnect;
 import grok_connect.connectors_info.DataQueryRunResult;
+import grok_connect.utils.ErrorClassifier;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -30,6 +31,7 @@ public class QueryHandler {
         if (id == null) {
             DataQueryRunResult result = new DataQueryRunResult();
             result.errorMessage = "Call id should be provided as header value [callId] of upgrade request";
+            result.errorType = ErrorClassifier.INTERNAL;
             session.getRemote().sendString(String.format("ERROR: %s", GrokConnect.gson.toJson(result)));
             session.close();
             return;
