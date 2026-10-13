@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.6 (unreleased)
+
+* Writes: `UpdateRows`/`DeleteRows.expectAffected` — a keyed update or delete that touches a different number of rows than expected raises before commit, so the whole batch rolls back and the row error reads `affected` with the count it did touch; `DataSource.supportsExpectAffected` advertises it alongside `supportsWrite`
+
 # 2.8.5
 
 * Query failures carry `errorType` (`user` | `internal`): database, network and cancellation errors are `user`, grok_connect's own failures (NPE, missing driver class, ...) are `internal`
