@@ -1,7 +1,10 @@
 # Grok Connect changelog
 
-# 2.8.6 (unreleased)
+# 2.8.6
 
+* SQL text (queries, mutations, DDL) is logged only for debug calls or when Datlas sends `logQueryText`; it used to be logged at INFO for every call
+* Passwords, tokens and secrets in JDBC URLs and custom connection strings (e.g. Virtuoso `PWD=`) are masked in logs and in the Hikari pool name
+* Logging: root logger at INFO (was DEBUG) and `com.zaxxer.hikari` at INFO (was ALL); `grok_connect` stays at DEBUG for the per-call debug stream, while stdout is filtered to `GROK_CONNECT_LOG_LEVEL` (default INFO)
 * Writes: `UpdateRows`/`DeleteRows.expectAffected` — a keyed update or delete that touches a different number of rows than expected raises before commit, so the whole batch rolls back and the row error reads `affected` with the count it did touch; `DataSource.supportsExpectAffected` advertises it alongside `supportsWrite`
 
 # 2.8.5

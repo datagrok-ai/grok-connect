@@ -26,7 +26,7 @@ public class ConnectionPool {
 
     public static Connection getConnection(String url, java.util.Properties properties, String driverClassName)
             throws GrokConnectException {
-        LOGGER.debug("getConnection was called for driver {} with url {}", driverClassName, url);
+        LOGGER.debug("getConnection was called for driver {} with url {}", driverClassName, GrokConnectUtil.maskCredentials(url));
         if (GrokConnectUtil.isEmpty(url) || properties == null || GrokConnectUtil.isEmpty(driverClassName))
             throw new GrokConnectException("Connection parameters are null");
         String key = url + properties + driverClassName;
@@ -112,7 +112,8 @@ public class ConnectionPool {
     }
 
     private static HikariDataSource getDataSource(String url, Properties properties, String driverClassName) {
-        LOGGER.info("Initializing pool for driver {} with url {}", driverClassName, url);
+        String maskedUrl = GrokConnectUtil.maskCredentials(url);
+        LOGGER.info("Initializing pool for driver {} with url {}", driverClassName, maskedUrl);
         Properties propertiesWithoutPass = new Properties();
         propertiesWithoutPass.putAll(properties);
         propertiesWithoutPass.remove(DbCredentials.LOGIN);
@@ -128,7 +129,7 @@ public class ConnectionPool {
         propertiesWithoutPass.remove(DbCredentials.TOKEN);
 
         String alphanumeric = "[^A-Za-z\\d./|=]";
-        String poolName = "Host - " + url.replaceAll("[:=]", "|").replaceAll(alphanumeric, "") +
+        String poolName = "Host - " + maskedUrl.replaceAll("[:=]", "|").replaceAll(alphanumeric, "") +
                 " . Properties - " + propertiesWithoutPass.toString().replaceAll("[:=]", "|").replaceAll(alphanumeric, "") +
                 " . Driver - " + driverClassName.replaceAll("[:=]", "|").replaceAll(alphanumeric, "");
         LOGGER.debug("Pool name: {}", poolName);

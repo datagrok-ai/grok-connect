@@ -8,6 +8,9 @@
     <appender name="SESSION" class="grok_connect.log.QueryStreamAppender"/>
 
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${GROK_CONNECT_LOG_LEVEL:-INFO}</level>
+        </filter>
         <appender-ref ref="STDOUT" />
         <discardingThreshold>0</discardingThreshold>
         <queueSize>512</queueSize>
@@ -15,12 +18,15 @@
         <includeCallerData>false</includeCallerData>
     </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="SESSION" />
         <appender-ref ref="ASYNC" />
     </root>
 
-    <logger name="com.zaxxer.hikari" level="ALL" additivity="false">
+    <!-- debug reaches the per-call SESSION stream (only for debug queries); stdout stays at INFO -->
+    <logger name="grok_connect" level="debug" />
+
+    <logger name="com.zaxxer.hikari" level="info" additivity="false">
         <appender-ref ref="ASYNC" />
     </logger>
 
