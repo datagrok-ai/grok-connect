@@ -40,7 +40,7 @@ public class DataConnection
     }
 
     public boolean ssl() {
-        return parameters.containsKey(DbCredentials.SSL) && (boolean)parameters.get(DbCredentials.SSL);
+        return Boolean.TRUE.equals(parameters.get(DbCredentials.SSL));
     }
 
     public boolean hasCustomConnectionString() {
