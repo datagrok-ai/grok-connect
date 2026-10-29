@@ -229,27 +229,8 @@ public class PostgresDataProvider extends JdbcDataProvider {
                 .append(" AND t.table_catalog = c.table_catalog ");
 
         if (includeKeyInfo) {
-            sql.append("LEFT JOIN ( ")
-                    .append("    SELECT kcu.table_schema, kcu.table_name, kcu.column_name ")
-                    .append("    FROM information_schema.table_constraints tc ")
-                    .append("    JOIN information_schema.key_column_usage kcu ")
-                    .append("      ON tc.constraint_name = kcu.constraint_name ")
-                    .append("     AND tc.table_schema = kcu.table_schema ")
-                    .append("    WHERE tc.constraint_type = 'PRIMARY KEY' ")
-                    .append(") pk ON pk.table_schema = c.table_schema ")
-                    .append("    AND pk.table_name = c.table_name ")
-                    .append("    AND pk.column_name = c.column_name ");
-
-            sql.append("LEFT JOIN ( ")
-                    .append("    SELECT kcu.table_schema, kcu.table_name, kcu.column_name ")
-                    .append("    FROM information_schema.table_constraints tc ")
-                    .append("    JOIN information_schema.key_column_usage kcu ")
-                    .append("      ON tc.constraint_name = kcu.constraint_name ")
-                    .append("     AND tc.table_schema = kcu.table_schema ")
-                    .append("    WHERE tc.constraint_type = 'UNIQUE' ")
-                    .append(") uq ON uq.table_schema = c.table_schema ")
-                    .append("    AND uq.table_name = c.table_name ")
-                    .append("    AND uq.column_name = c.column_name ");
+            sql.append(keyColumnsJoin("p", "pk"));
+            sql.append(keyColumnsJoin("u", "uq"));
         }
 
         sql.append(" ")
@@ -257,6 +238,21 @@ public class PostgresDataProvider extends JdbcDataProvider {
                 .append(" ORDER BY c.table_name, c.ordinal_position");
 
         return sql.toString();
+    }
+
+    // Reads pg_catalog: information_schema.table_constraints hides the keys of a table the
+    // user may only SELECT from, so a read-only connection saw no primary key at all.
+    private static String keyColumnsJoin(String contype, String alias) {
+        return "LEFT JOIN ( " +
+                "    SELECT n.nspname AS table_schema, cl.relname AS table_name, a.attname AS column_name " +
+                "    FROM pg_catalog.pg_constraint con " +
+                "    JOIN pg_catalog.pg_class cl ON cl.oid = con.conrelid " +
+                "    JOIN pg_catalog.pg_namespace n ON n.oid = cl.relnamespace " +
+                "    JOIN pg_catalog.pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = ANY (con.conkey) " +
+                "    WHERE con.contype = '" + contype + "' " +
+                ") " + alias + " ON " + alias + ".table_schema = c.table_schema " +
+                "    AND " + alias + ".table_name = c.table_name " +
+                "    AND " + alias + ".column_name = c.column_name ";
     }
 
     @Override
