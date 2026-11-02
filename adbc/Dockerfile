@@ -50,7 +50,7 @@ RUN go get \
         golang.org/x/text@v0.40.0 \
         github.com/apache/thrift@v0.24.0 \
         github.com/klauspost/compress@v1.19.1 \
-        google.golang.org/grpc@v1.83.0 \
+        google.golang.org/grpc@v1.83.2 \
         go.opentelemetry.io/otel@v1.45.0 \
         go.opentelemetry.io/otel/sdk@v1.45.0 \
         go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.45.0 \
