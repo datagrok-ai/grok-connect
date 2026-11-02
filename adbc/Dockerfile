@@ -45,12 +45,12 @@ RUN git clone --depth 1 --branch "${ADBC_GO_REF}" https://github.com/apache/arro
 WORKDIR /adbc/go/adbc
 
 RUN go get \
-        golang.org/x/crypto@v0.54.0 \
-        golang.org/x/net@v0.57.0 \
-        golang.org/x/text@v0.40.0 \
+        golang.org/x/crypto@v0.55.0 \
+        golang.org/x/net@v0.58.0 \
+        golang.org/x/text@v0.41.0 \
         github.com/apache/thrift@v0.24.0 \
         github.com/klauspost/compress@v1.19.1 \
-        google.golang.org/grpc@v1.83.0 \
+        google.golang.org/grpc@v1.83.2 \
         go.opentelemetry.io/otel@v1.45.0 \
         go.opentelemetry.io/otel/sdk@v1.45.0 \
         go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.45.0 \
