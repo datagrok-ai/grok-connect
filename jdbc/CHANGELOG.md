@@ -1,5 +1,10 @@
 # Grok Connect changelog
 
+# 2.8.7
+
+* Security: Databricks JDBC 2.8.3 → 2.8.7, Jackson 2.18.9 → 2.18.11, Guava 33.7.2-jre (also inside hadoop-shaded-guava 1.6.0), lz4-java 1.11.4; dropped the unused auto-value jar and the base image's Maven from the runtime image
+* ADBC image (grok_connect_adbc 0.1.1): grpc 1.83.2, x/crypto 0.55.0, x/net 0.58.0, x/text 0.41.0
+
 # 2.8.6
 
 * SQL text (queries, mutations, DDL) is logged only for debug calls or when Datlas sends `logQueryText`; it used to be logged at INFO for every call
