@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke test of a built grok_connect image: boots it, checks the runtime contract
 # (user, locale, JVM settings) and runs real queries through the HTTP API.
-#   main:     SQLite (northwind file shipped in the image; native sqlite-jdbc on musl)
+#   main:     Access (northwind.mdb shipped in the image), SQLite through the JVM directly
+#             (not an HTTP provider; proves the native sqlite-jdbc loads on musl)
 #             and Postgres (service container on localhost:5432).
 #   extended: /conn advertises exactly the quarantined providers.
 # Also lists the native libraries bundled in the jars and what the musl loader
@@ -70,13 +71,26 @@ PY
 }
 
 if [ "$flavor" = "main" ]; then
-  for p in SQLite Postgres MariaDB; do
+  for p in Access Postgres MariaDB; do
     [[ ",$providers," == *",$p,"* ]] || fail "provider $p is not advertised"
   done
 
-  query sqlite '{"id":"smoke-sqlite","options":{},"func":{"name":"products","params":[],
-    "query":"select ProductID, ProductName, UnitPrice, Discontinued from Products",
-    "connection":{"dataSource":"SQLite","parameters":{"db":"/home/grok/northwind/Northwind.sl3"}}}}' 77
+  query access '{"id":"smoke-access","options":{},"func":{"name":"products","params":[],
+    "query":"select count(*) as n from Products",
+    "connection":{"dataSource":"Access","parameters":{"db":"/home/grok/northwind/northwind.mdb"}}}}' 1
+
+  # SQLite is not an HTTP provider; drive the shaded sqlite-jdbc (JNI) in the image's JVM
+  # through the JRE's Nashorn shell to prove its musl native loads and queries.
+  docker exec -i "$name" sh -c 'cat > /tmp/sqlite_smoke.js' <<'JS'
+var c = java.sql.DriverManager.getConnection("jdbc:sqlite:/home/grok/northwind/Northwind.sl3");
+var rs = c.createStatement().executeQuery("select count(*), sqlite_version() from Products");
+rs.next();
+print("sqlite: " + rs.getInt(1) + " products, sqlite " + rs.getString(2));
+if (rs.getInt(1) != 77) java.lang.System.exit(1);
+c.close();
+JS
+  docker exec "$name" java -cp grok_connect.jar jdk.nashorn.tools.Shell /tmp/sqlite_smoke.js \
+    || fail "sqlite: native driver query failed"
 
   query postgres '{"id":"smoke-postgres","options":{},"func":{"name":"pg","params":[],
     "query":"select g as id, '\''Grüße ® '\'' || g as label, now() as ts from generate_series(1, 1000) g",
