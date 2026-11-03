@@ -8,7 +8,7 @@ mod routes;
 mod state;
 
 use crate::config::Config;
-use crate::providers::build_registry;
+use crate::providers::{build_registry, probe_all};
 use crate::state::{AppState, ConnectionPoolManager};
 use axum::routing::{get, post};
 use axum::Router;
@@ -69,6 +69,10 @@ async fn main() {
     }
 
     prepend_driver_search_path();
+
+    if std::env::args().any(|a| a == "--probe-drivers") {
+        std::process::exit(if probe_all() { 0 } else { 1 });
+    }
 
     // Initialize tracing
     tracing_subscriber::fmt()

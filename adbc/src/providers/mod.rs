@@ -28,3 +28,25 @@ pub fn build_registry() -> ProviderRegistry {
     registry.register_probed(BigQueryProvider::new());
     registry
 }
+
+/// Loads every provider's driver, advertised or not, and reports each on stdout/stderr.
+/// Backs `--probe-drivers`, which proves a built image can load all the drivers it ships.
+pub fn probe_all() -> bool {
+    let providers: [Box<dyn DbProvider>; 4] = [
+        Box::new(DatabricksProvider::new()),
+        Box::new(SnowflakeProvider::new()),
+        Box::new(ClickhouseProvider::new()),
+        Box::new(BigQueryProvider::new()),
+    ];
+    let mut all_loaded = true;
+    for provider in &providers {
+        match provider.probe() {
+            Ok(()) => println!("{}: driver loaded", provider.name()),
+            Err(e) => {
+                eprintln!("{}: {:#}", provider.name(), e);
+                all_loaded = false;
+            }
+        }
+    }
+    all_loaded
+}

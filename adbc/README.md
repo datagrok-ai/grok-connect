@@ -59,3 +59,8 @@ cargo test                    # unit + protocol tests
 Integration tests that need live database credentials are skipped unless the
 corresponding environment variables (e.g. `SNOWFLAKE_CREDS_PATH`) are set — see
 `scripts/e2e_smoke.sh`.
+
+CI smoke-tests every built image with `scripts/image_smoke.sh <image>`: `grok_connect_adbc
+--probe-drivers` loads every shipped driver (advertised or not) and exits non-zero if one
+fails, then the service is started and a query runs through the ClickHouse driver against a
+ClickHouse service container.
