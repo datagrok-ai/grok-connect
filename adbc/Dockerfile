@@ -27,15 +27,14 @@ WORKDIR /src
 RUN cargo build --release --features ffi
 
 # ---------------------------------------------------------------------------
-# Stage 2: build the BigQuery and Snowflake ADBC drivers from source.
+# Stage 2a: build the BigQuery ADBC driver from source.
 #
-# Both are Go builds. Upstream ships them as a PyPI wheel (BigQuery) and an Apache Arrow
-# apt package (Snowflake), but those binaries are stamped with whatever Go toolchain and
-# dependency set the release was cut with, and ADBC 24 dropped both drivers — so there is
-# no newer upstream build to move to. Building here lets us pick the toolchain and raise
-# the vulnerable dependency floors; the ldflags mirror the upstream pkg/Makefile.
+# A Go build. Upstream ships it as a PyPI wheel, but that binary is stamped with whatever Go
+# toolchain and dependency set the release was cut with, and ADBC 24 dropped the driver — so
+# there is no newer upstream build to move to. Building here lets us pick the toolchain and
+# raise the vulnerable dependency floors; the ldflags mirror the upstream pkg/Makefile.
 # ---------------------------------------------------------------------------
-FROM golang:1.26-bookworm AS adbc-go-drivers
+FROM golang:1.26-bookworm AS adbc-bigquery-driver
 
 ARG ADBC_GO_REF=go/adbc/v1.11.0
 ARG ADBC_DRIVER_VERSION=v1.11.0
@@ -45,9 +44,10 @@ RUN git clone --depth 1 --branch "${ADBC_GO_REF}" https://github.com/apache/arro
 WORKDIR /adbc/go/adbc
 
 RUN go get \
-        golang.org/x/crypto@v0.55.0 \
-        golang.org/x/net@v0.58.0 \
-        golang.org/x/text@v0.41.0 \
+        golang.org/x/crypto@v0.58.0 \
+        golang.org/x/net@v0.62.0 \
+        golang.org/x/sys@v0.49.0 \
+        golang.org/x/text@v0.43.0 \
         github.com/apache/thrift@v0.24.0 \
         github.com/klauspost/compress@v1.19.1 \
         google.golang.org/grpc@v1.83.2 \
@@ -62,11 +62,34 @@ RUN go get \
     && go mod tidy
 
 RUN mkdir -p /drivers && cd pkg \
-    && for d in bigquery snowflake; do \
-         go build -buildvcs=false -tags driverlib -buildmode=c-shared \
-           -ldflags "-s -w -X github.com/apache/arrow-adbc/go/adbc/driver/internal/driverbase.infoDriverVersion=${ADBC_DRIVER_VERSION}" \
-           -o "/drivers/libadbc_driver_${d}.so" "./${d}"; \
-       done \
+    && go build -buildvcs=false -tags driverlib -buildmode=c-shared \
+         -ldflags "-s -w -X github.com/apache/arrow-adbc/go/adbc/driver/internal/driverbase.infoDriverVersion=${ADBC_DRIVER_VERSION}" \
+         -o /drivers/libadbc_driver_bigquery.so ./bigquery \
+    && rm -f /drivers/*.h
+
+# ---------------------------------------------------------------------------
+# Stage 2b: build the Snowflake ADBC driver from source.
+#
+# The Go Snowflake driver moved out of apache/arrow-adbc into adbc-drivers/snowflake. The
+# arrow-adbc copy is stuck on gosnowflake v1, which has no fix for CVE-2026-86597 (fixed only
+# in gosnowflake/v2 2.2.0); this one is on v2. It exports the same AdbcDriverSnowflakeInit
+# entrypoint the adbc_snowflake crate loads. Tags and ldflags mirror its adbc-make build.
+# ---------------------------------------------------------------------------
+FROM golang:1.27-bookworm AS adbc-snowflake-driver
+
+ARG ADBC_SNOWFLAKE_REF=go/v1.15.1
+ARG ADBC_SNOWFLAKE_VERSION=v1.15.1
+
+RUN git clone --depth 1 --branch "${ADBC_SNOWFLAKE_REF}" https://github.com/adbc-drivers/snowflake /snowflake
+
+WORKDIR /snowflake/go
+
+RUN go get golang.org/x/net@v0.62.0 && go mod tidy
+
+RUN mkdir -p /drivers \
+    && go build -buildvcs=false -tags driverlib,timetzdata,minicore_disabled -buildmode=c-shared \
+         -ldflags "-s -w -X github.com/adbc-drivers/driverbase-go/driverbase.infoDriverVersion=${ADBC_SNOWFLAKE_VERSION}" \
+         -o /drivers/libadbc_driver_snowflake.so ./pkg \
     && rm -f /drivers/*.h
 
 # ---------------------------------------------------------------------------
@@ -102,10 +125,16 @@ RUN cargo build --release
 # Stage 4: runtime image
 # ---------------------------------------------------------------------------
 #
-# Distroless rather than debian-slim: nothing here links against anything beyond glibc and
-# libgcc, and every package a full base drags in (perl, curl/libssh2, wget, gnupg, apt) is
-# CVE surface for code this service never runs.
-FROM gcr.io/distroless/cc-debian13
+# Wolfi rather than distroless/cc-debian13: the same minimal glibc + libgcc + CA bundle with no
+# shell or package manager, but Wolfi tracks upstream glibc/gcc releases and backports, so it
+# does not carry Debian's long tail of unfixed and disputed glibc/gcc/zlib CVEs (and no zlib at
+# all — nothing here links it). Chainguard's free tier publishes only `latest`; it is meant to
+# be followed, not pinned. Its default user is nonroot, so USER/PATH restate distroless's.
+FROM cgr.dev/chainguard/glibc-dynamic:latest
+
+USER 0
+WORKDIR /
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 COPY --from=builder /build/target/release/grok_connect_adbc /usr/local/bin/
 
@@ -113,11 +142,11 @@ COPY --from=builder /build/target/release/grok_connect_adbc /usr/local/bin/
 COPY --from=clickhouse-driver /src/target/release/libadbc_clickhouse.so /usr/local/lib/
 ENV ADBC_CLICKHOUSE_DRIVER=/usr/local/lib/libadbc_clickhouse.so
 
-# BigQuery and Snowflake ADBC drivers, built in the adbc-go-drivers stage. BigQuery is
-# pointed at by full path; Snowflake is loaded by name, hence LD_LIBRARY_PATH — there is
-# no ldconfig cache here.
-COPY --from=adbc-go-drivers /drivers/libadbc_driver_bigquery.so /usr/local/lib/
-COPY --from=adbc-go-drivers /drivers/libadbc_driver_snowflake.so /usr/local/lib/
+# BigQuery and Snowflake ADBC drivers, built in the Go driver stages. BigQuery is
+# pointed at by full path; Snowflake is loaded by name, hence LD_LIBRARY_PATH —
+# /usr/local/lib is not in the base image's ldconfig cache.
+COPY --from=adbc-bigquery-driver /drivers/libadbc_driver_bigquery.so /usr/local/lib/
+COPY --from=adbc-snowflake-driver /drivers/libadbc_driver_snowflake.so /usr/local/lib/
 ENV ADBC_BIGQUERY_DRIVER=/usr/local/lib/libadbc_driver_bigquery.so
 ENV LD_LIBRARY_PATH=/usr/local/lib
 

@@ -34,6 +34,18 @@ jobs:
     # a cold cache.
     timeout-minutes: 120
     if: needs.common-check.outputs.continue == 'true'
+    services:
+      # Target of the image smoke test's real query.
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.8
+        env:
+          CLICKHOUSE_PASSWORD: clickhouse
+        ports:
+          - 8123:8123
+        options: >-
+          --ulimit nofile=262144:262144
+          --health-cmd "clickhouse-client --password clickhouse -q 'SELECT 1'"
+          --health-interval 5s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,6 +126,31 @@ jobs:
         with:
           dockerfile: ./adbc/Dockerfile
           failure-threshold: error
+
+      # Built and tested before the publishing build below, which reuses this build's cache:
+      # an image that cannot load its drivers or run a query never reaches Docker Hub.
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v3
+        with:
+          context: ./adbc
+          platforms: linux/amd64
+          load: true
+          tags: grok_connect_adbc:smoke
+          cache-from: type=registry,ref=datagrok/grok_connect_adbc:cache
+
+      - name: Smoke test image
+        env:
+          CLICKHOUSE_HOST: 127.0.0.1
+          CLICKHOUSE_PASSWORD: clickhouse
+        run: |
+          python3 -m pip install --quiet websockets pyarrow
+          bash ./adbc/scripts/image_smoke.sh grok_connect_adbc:smoke
+
+      - name: Scan image (informational)
+        continue-on-error: true
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
+            image --scanners vuln --exit-code 0 --no-progress grok_connect_adbc:smoke
 
       - name: Build and push
         uses: docker/build-push-action@v3
