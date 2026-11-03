@@ -135,7 +135,7 @@ FROM cgr.dev/chainguard/wolfi-base:latest AS runtime-rootfs
 
 RUN mkdir -p /rootfs/etc/apk \
     && cp -r /etc/apk/keys /etc/apk/repositories /rootfs/etc/apk/ \
-    && apk add --no-cache --root /rootfs --initdb \
+    && apk add --no-cache --no-scripts --root /rootfs --initdb \
          wolfi-baselayout ca-certificates-bundle glibc glibc-locale-posix ld-linux \
          libgcc libstdc++ libssl3
 

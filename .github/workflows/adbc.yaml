@@ -150,7 +150,8 @@ jobs:
         continue-on-error: true
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
-            image --scanners vuln --exit-code 0 --no-progress grok_connect_adbc:smoke
+            image --scanners vuln --exit-code 0 --no-progress \
+            --file-patterns 'gobinary:.*\.so$' grok_connect_adbc:smoke
 
       - name: Build and push
         uses: docker/build-push-action@v3
