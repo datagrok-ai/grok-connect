@@ -75,7 +75,7 @@ if [ "$flavor" = "main" ]; then
     [[ ",$providers," == *",$p,"* ]] || fail "provider $p is not advertised"
   done
 
-  query access '{"id":"smoke-access","options":{},"func":{"name":"products","params":[],
+  query access '{"id":"smoke-access","options":{},"func":{"#type":"DataQuery","name":"products","params":[],
     "query":"select count(*) as n from Products",
     "connection":{"dataSource":"Access","parameters":{"db":"/home/grok/northwind/northwind.mdb"}}}}' 1
 
@@ -92,7 +92,7 @@ JS
   docker exec "$name" java -cp grok_connect.jar jdk.nashorn.tools.Shell /tmp/sqlite_smoke.js \
     || fail "sqlite: native driver query failed"
 
-  query postgres '{"id":"smoke-postgres","options":{},"func":{"name":"pg","params":[],
+  query postgres '{"id":"smoke-postgres","options":{},"func":{"#type":"DataQuery","name":"pg","params":[],
     "query":"select g as id, '\''Grüße ® '\'' || g as label, now() as ts from generate_series(1, 1000) g",
     "connection":{"dataSource":"Postgres","parameters":{"server":"localhost","port":5432,"db":"smoke"},
     "credentials":{"parameters":{"login":"smoke","password":"smoke"}}}}' 1000
