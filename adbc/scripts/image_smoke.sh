@@ -18,6 +18,14 @@ BASE_URL="http://127.0.0.1:${PORT}"
 NAME="grok-connect-adbc-smoke-$$"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+echo "=== Shared-library dependencies resolve ==="
+for elf in /usr/local/bin/grok_connect_adbc /usr/local/lib/libadbc_clickhouse.so \
+           /usr/local/lib/libadbc_driver_bigquery.so /usr/local/lib/libadbc_driver_snowflake.so; do
+  deps="$(docker run --rm --entrypoint /lib64/ld-linux-x86-64.so.2 "${IMAGE}" --list "${elf}" 2>&1 || true)"
+  echo "${elf}:"; echo "${deps}"
+  ! grep -q "not found" <<<"${deps}" || { echo "unresolved dependency in ${elf}"; exit 1; }
+done
+
 echo "=== Drivers load (--probe-drivers) ==="
 docker run --rm "${IMAGE}" --probe-drivers
 

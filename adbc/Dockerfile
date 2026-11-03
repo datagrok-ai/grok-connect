@@ -122,19 +122,34 @@ COPY . .
 RUN cargo build --release
 
 # ---------------------------------------------------------------------------
-# Stage 4: runtime image
+# Stage 4: runtime root filesystem
 # ---------------------------------------------------------------------------
 #
-# Wolfi rather than distroless/cc-debian13: the same minimal glibc + libgcc + CA bundle with no
-# shell or package manager, but Wolfi tracks upstream glibc/gcc releases and backports, so it
-# does not carry Debian's long tail of unfixed and disputed glibc/gcc/zlib CVEs (and no zlib at
-# all — nothing here links it). Chainguard's free tier publishes only `latest`; it is meant to
-# be followed, not pinned. Its default user is nonroot, so USER/PATH restate distroless's.
-FROM cgr.dev/chainguard/glibc-dynamic:latest
+# Wolfi rather than distroless/cc-debian13: the same minimal glibc + libgcc + OpenSSL + CA
+# bundle, but Wolfi tracks upstream glibc/gcc/openssl releases and backports, so it does not
+# carry Debian's long tail of unfixed and disputed glibc/gcc/zlib CVEs (and no zlib at all —
+# nothing here links it). libssl is needed by the Databricks crate (reqwest native-tls).
+# The packages are installed into an empty root with apk, so the apk database the scanner
+# reads lists every one of them, and the image gets no shell, busybox or apk.
+FROM cgr.dev/chainguard/wolfi-base:latest AS runtime-rootfs
+
+RUN mkdir -p /rootfs/etc/apk \
+    && cp -r /etc/apk/keys /etc/apk/repositories /rootfs/etc/apk/ \
+    && apk add --no-cache --root /rootfs --initdb \
+         wolfi-baselayout ca-certificates-bundle glibc glibc-locale-posix ld-linux \
+         libgcc libstdc++ libssl3
+
+# ---------------------------------------------------------------------------
+# Stage 5: runtime image
+# ---------------------------------------------------------------------------
+FROM scratch
+
+COPY --from=runtime-rootfs /rootfs /
 
 USER 0
 WORKDIR /
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 COPY --from=builder /build/target/release/grok_connect_adbc /usr/local/bin/
 
