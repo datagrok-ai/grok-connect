@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.8
+
+* Security: runtime image moved from `datagrok/openjdk:8` (Ubuntu 22.04, JDK 8u302) to a minimal Alpine 3.24 root (musl, busybox, zlib; no apk-tools/OpenSSL) with the Eclipse Temurin 8u504 JRE, which drops every Ubuntu OS finding; mariadb-java-client 3.5.10 → 3.5.11; CI now smoke-tests both images (SQLite native driver, Postgres, UTF-8) before publishing
+
 # 2.8.7
 
 * Security: Databricks JDBC 2.8.3 → 2.8.7, Jackson 2.18.9 → 2.18.11, Guava 33.7.2-jre (also inside hadoop-shaded-guava 1.6.0), lz4-java 1.11.4; dropped the unused auto-value jar and the base image's Maven from the runtime image

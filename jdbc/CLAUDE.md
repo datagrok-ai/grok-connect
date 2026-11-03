@@ -553,7 +553,9 @@ Default settings (can be overridden):
 ## Notes
 
 - Source/target level is Java 8 (`pom.xml`; some JDBC drivers don't support newer versions) and
-  the Docker image runs on `datagrok/openjdk:8`. The shade config drops `META-INF/versions/**`,
+  the Docker image builds on `datagrok/openjdk:8` but runs on a minimal Alpine root (musl) with
+  the Temurin 8 JRE (`/opt/java/openjdk`) — bundled JNI libraries must have a musl build or a
+  pure-Java fallback; `.github/scripts/jdbc_smoke_test.sh` (CI) lists what each one resolves. The shade config drops `META-INF/versions/**`,
   so it must also drop every service entry that points at a multi-release class — dnsjava's
   `META-INF/services/java.net.spi.InetAddressResolverProvider` is excluded for that reason
   (`server/pom.xml`); with it present, JDK 18+ fails every `InetAddress` lookup

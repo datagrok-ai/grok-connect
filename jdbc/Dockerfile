@@ -53,7 +53,27 @@ RUN set -ex ; \
       rm -f $EXTENDED_JARS ; \
     fi
 
-FROM datagrok/openjdk:8 as main
+# Runtime rootfs: the Alpine packages the JRE needs (musl) plus busybox for a shell,
+# installed into an empty root so apk-tools and OpenSSL stay out of the shipped image.
+# APK_REFRESH changes per CI run so a registry layer cache never pins stale packages.
+FROM alpine:3.24 as runtime_rootfs
+ARG APK_REFRESH=""
+RUN set -ex ; \
+    echo "apk refresh: ${APK_REFRESH}" ; \
+    apk add --no-cache --root /rootfs --initdb \
+      --keys-dir /etc/apk/keys --repositories-file /etc/apk/repositories \
+      alpine-baselayout alpine-baselayout-data alpine-release \
+      busybox busybox-binsh musl zlib
+
+FROM eclipse-temurin:8u504-b01-jre-alpine-3.24 as jre
+
+FROM scratch as main
+
+COPY --from=runtime_rootfs /rootfs /
+
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH=${JAVA_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+COPY --from=jre ${JAVA_HOME} ${JAVA_HOME}
 
 # Java 8 derives its default charset from the locale; in a minimal image that is
 # ANSI_X3.4-1968 (US-ASCII), which mangles multibyte UTF-8 from result sets (e.g.
@@ -66,15 +86,14 @@ ARG HOME_DIR
 ARG GROK_CONNECT_DIR
 ENV GROK_CONNECT_DIR=${GROK_CONNECT_DIR}
 
-RUN groupadd --gid 2001 grok ; \
-    useradd --system --create-home --home ${HOME_DIR} --gid grok --uid 1001 grok
+RUN addgroup -S -g 2001 grok ; \
+    adduser -S -D -u 1001 -G grok -h ${HOME_DIR} -s /bin/sh grok
 
 COPY --chown=grok:grok --from=grok_connect_builder ${GROK_CONNECT_DIR} ${GROK_CONNECT_DIR}
 COPY $GROK_CONNECT_SOURCE_DIR/server/northwind ${HOME_DIR}/northwind
 # https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/jvm-ttl-dns.html
-RUN echo "networkaddress.cache.ttl=5" >> $JAVA_HOME/jre/lib/security/java.security ; \
-    # the base image's Maven only builds; its bundled guava is a scanner finding at runtime
-    rm -rf ${MAVEN_HOME}
+RUN echo "networkaddress.cache.ttl=5" >> ${JAVA_HOME}/lib/security/java.security ; \
+    java -version
 
 USER grok:grok
 WORKDIR ${GROK_CONNECT_DIR}
