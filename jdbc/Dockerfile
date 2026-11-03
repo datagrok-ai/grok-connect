@@ -72,7 +72,9 @@ RUN groupadd --gid 2001 grok ; \
 COPY --chown=grok:grok --from=grok_connect_builder ${GROK_CONNECT_DIR} ${GROK_CONNECT_DIR}
 COPY $GROK_CONNECT_SOURCE_DIR/server/northwind ${HOME_DIR}/northwind
 # https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/jvm-ttl-dns.html
-RUN echo "networkaddress.cache.ttl=5" >> $JAVA_HOME/jre/lib/security/java.security
+RUN echo "networkaddress.cache.ttl=5" >> $JAVA_HOME/jre/lib/security/java.security ; \
+    # the base image's Maven only builds; its bundled guava is a scanner finding at runtime
+    rm -rf ${MAVEN_HOME}
 
 USER grok:grok
 WORKDIR ${GROK_CONNECT_DIR}
