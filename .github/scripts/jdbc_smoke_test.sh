@@ -95,10 +95,15 @@ JS
     || fail "sqlite: native driver query failed"
 
   query postgres '{"id":"smoke-postgres","options":{},"func":{"#type":"DataQuery","name":"pg","params":[],
-    "query":"select g as id, '\''Grüße ® '\'' || g as label, now() as ts from generate_series(1, 1000) g",
+    "query":"select g as id, md5(g::text) as label, now() as ts from generate_series(1, 1000) g",
     "connection":{"dataSource":"Postgres","parameters":{"server":"localhost","port":5432,"db":"smoke"},
     "credentials":{"parameters":{"login":"smoke","password":"smoke"}}}}}' 1000
-  grep -aq 'Grüße ®' "$work/postgres.bin" || fail "postgres: UTF-8 string did not survive the round trip"
+  # one row, so the value is written verbatim whatever string encoder the column picks
+  query postgres_utf8 '{"id":"smoke-utf8","options":{},"func":{"#type":"DataQuery","name":"utf8","params":[],
+    "query":"select '\''Grüße ®'\'' as s",
+    "connection":{"dataSource":"Postgres","parameters":{"server":"localhost","port":5432,"db":"smoke"},
+    "credentials":{"parameters":{"login":"smoke","password":"smoke"}}}}}' 1
+  grep -aq 'Grüße ®' "$work/postgres_utf8.bin" || fail "postgres: UTF-8 string did not survive the round trip"
   echo "postgres: UTF-8 round trip OK"
 else
   [ "$providers" = "Impala,Neptune" ] || fail "extended image must advertise exactly Impala,Neptune"
