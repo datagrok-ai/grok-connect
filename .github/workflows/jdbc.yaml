@@ -8,10 +8,12 @@ on:
     paths:
       - 'jdbc/**'
       - '.github/workflows/jdbc.yaml'
+      - '.github/scripts/jdbc_smoke_test.sh'
   pull_request:
     paths:
       - 'jdbc/**'
       - '.github/workflows/jdbc.yaml'
+      - '.github/scripts/jdbc_smoke_test.sh'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -89,6 +91,20 @@ jobs:
           - flavor: extended
             repo: grok_connect_extended
             providers: "Neptune,Impala"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smoke
+          POSTGRES_PASSWORD: smoke
+          POSTGRES_DB: smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,6 +174,33 @@ jobs:
           dockerfile: ./jdbc/Dockerfile
           failure-threshold: error
 
+      # Built (from the same layer cache as the publish step below) and smoke-tested
+      # before anything is pushed: a broken runtime image never reaches Docker Hub.
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v3
+        with:
+          context: ./jdbc
+          platforms: linux/amd64
+          load: true
+          tags: grok_connect_smoke:${{ matrix.flavor }}
+          cache-from: type=registry,ref=datagrok/${{ matrix.repo }}:cache
+          build-args: |
+            BRANCH=${{ steps.param.outputs.branch }}
+            COMMIT_PUBLIC=${{ github.sha }}
+            FLAVOR=${{ matrix.flavor }}
+            GROK_CONNECT_PROVIDERS=${{ matrix.providers }}
+            APK_REFRESH=${{ github.run_id }}
+
+      - name: Smoke test
+        run: bash ./.github/scripts/jdbc_smoke_test.sh grok_connect_smoke:${{ matrix.flavor }} ${{ matrix.flavor }}
+
+      - name: Vulnerability scan (informational)
+        continue-on-error: true
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
+            image --scanners vuln --pkg-types os,library --no-progress --format table \
+            grok_connect_smoke:${{ matrix.flavor }}
+
       - name: Build and push
         uses: docker/build-push-action@v3
         id: build-push
@@ -174,6 +217,7 @@ jobs:
             COMMIT_PUBLIC=${{ github.sha }}
             FLAVOR=${{ matrix.flavor }}
             GROK_CONNECT_PROVIDERS=${{ matrix.providers }}
+            APK_REFRESH=${{ github.run_id }}
           labels: |
             BRANCH=${{ steps.param.outputs.branch }}
             COMMIT_PUBLIC=${{ github.sha }}
@@ -194,6 +238,7 @@ jobs:
             COMMIT_PUBLIC=${{ github.sha }}
             FLAVOR=${{ matrix.flavor }}
             GROK_CONNECT_PROVIDERS=${{ matrix.providers }}
+            APK_REFRESH=${{ github.run_id }}
           labels: |
             BRANCH=${{ steps.param.outputs.branch }}
             COMMIT_PUBLIC=${{ github.sha }}

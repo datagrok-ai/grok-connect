@@ -107,7 +107,7 @@ public class GrokConnect {
                 result.blobLength = result.blob.length;
                 result.timeStamp = Instant.ofEpochMilli(startTime)
                         .atZone(ZoneId.systemDefault())
-                        .toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"));
+                        .toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 result.execTime = execTime;
                 result.columns = dataFrame.getColumnCount();
                 result.rows = dataFrame.rowCount;
