@@ -75,9 +75,11 @@ if [ "$flavor" = "main" ]; then
     [[ ",$providers," == *",$p,"* ]] || fail "provider $p is not advertised"
   done
 
+  # UCanAccess (memory=false) writes its HSQLDB mirror next to the .mdb; northwind/ is read-only
+  docker exec "$name" cp /home/grok/northwind/northwind.mdb /tmp/northwind.mdb
   query access '{"id":"smoke-access","options":{},"func":{"#type":"DataQuery","name":"products","params":[],
     "query":"select count(*) as n from Products",
-    "connection":{"dataSource":"Access","parameters":{"db":"/home/grok/northwind/northwind.mdb"}}}}' 1
+    "connection":{"dataSource":"Access","parameters":{"db":"/tmp/northwind.mdb"}}}}' 1
 
   # SQLite is not an HTTP provider; drive the shaded sqlite-jdbc (JNI) in the image's JVM
   # through the JRE's Nashorn shell to prove its musl native loads and queries.
