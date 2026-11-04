@@ -3,6 +3,7 @@
 # 2.8.8
 
 * Security: runtime image moved from `datagrok/openjdk:8` (Ubuntu 22.04, JDK 8u302) to a minimal Alpine 3.24 root (musl, busybox, zlib; no apk-tools/OpenSSL) with the Eclipse Temurin 8u504 JRE, which drops every Ubuntu OS finding; mariadb-java-client 3.5.10 → 3.5.11; CI now smoke-tests both images (SQLite native driver, Postgres, UTF-8) before publishing
+* Fixed: the HTTP `/query` route failed every successful query with `UnsupportedTemporalTypeException: ClockHourOfAmPm` (formatted a `LocalDate` with an hours pattern); the streaming `/query_socket` path was not affected
 
 # 2.8.7
 
