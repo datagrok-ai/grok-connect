@@ -97,7 +97,7 @@ JS
   query postgres '{"id":"smoke-postgres","options":{},"func":{"#type":"DataQuery","name":"pg","params":[],
     "query":"select g as id, '\''Grüße ® '\'' || g as label, now() as ts from generate_series(1, 1000) g",
     "connection":{"dataSource":"Postgres","parameters":{"server":"localhost","port":5432,"db":"smoke"},
-    "credentials":{"parameters":{"login":"smoke","password":"smoke"}}}}' 1000
+    "credentials":{"parameters":{"login":"smoke","password":"smoke"}}}}}' 1000
   grep -aq 'Grüße ®' "$work/postgres.bin" || fail "postgres: UTF-8 string did not survive the round trip"
   echo "postgres: UTF-8 round trip OK"
 else
