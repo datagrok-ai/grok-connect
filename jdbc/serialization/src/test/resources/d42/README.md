@@ -40,7 +40,7 @@ pub run test test/serialization/d42_fixture_generator_test.dart
 ```
 
 The generator (`core/shared/ddt/test/serialization/d42_fixture_generator_test.dart`) writes
-the `.d42` + `.expected.json` pairs into core's `data/formats/d42/dart` (copy them here), round-trips each fixture
+the `.d42` + `.expected.json` pairs into the umbrella's `data/formats/d42/dart` (copy them here), round-trips each fixture
 through the Dart reader (guarding against generator bugs), and asserts the natural family
 picks the intended encoder. Serialization is deterministic (metadata ids are pinned and the
 blob tail carries a minimal fixed JSON), so an unchanged format leaves the tree clean. A
