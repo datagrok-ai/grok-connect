@@ -32,7 +32,7 @@ DART_SDK="$(which dart)"
 DART_PUB=$(which pub)
 
 
-GROK_SRC="${GROK_SRC:-$(dirname "$0")/../../core}"
+GROK_SRC="${GROK_SRC:-$(dirname "$0")/../..}"
 [ -d "$GROK_SRC" ] && GROK_SRC="$(cd "$GROK_SRC" && pwd)"
 cd "$(dirname "$0")"
 JDBC_DIR=$(pwd)

@@ -28,7 +28,7 @@
 ::
 @echo off
 setlocal
-if not defined GROK_SRC set "GROK_SRC=%~dp0..\..\core"
+if not defined GROK_SRC set "GROK_SRC=%~dp0..\.."
 for %%i in ("%GROK_SRC%") do set "GROK_SRC=%%~fi"
 cd /d "%~dp0"
 set "JDBC_DIR=%CD%"
