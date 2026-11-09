@@ -3,6 +3,7 @@ package grok_connect.providers;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import grok_connect.connectors_info.DataConnection;
@@ -121,7 +122,7 @@ public class AthenaDataProvider extends JdbcDataProvider {
             setIfNotNull(properties, "Database", conn.getDb());
             setIfNotNull(properties, "EncryptionOption", conn.get(DbCredentials.S3OutputEncOption));
         }
-        // the streaming-results client isn't shipped; CSE_KMS results can't use the direct S3 fetcher
+        // CSE_KMS results can't use the direct S3 fetcher
         if ("CSE_KMS".equals(properties.get("EncryptionOption")))
             properties.put("ResultFetcher", "GetQueryResults");
         return properties;
@@ -129,8 +130,9 @@ public class AthenaDataProvider extends JdbcDataProvider {
 
     @Override
     public Connection getConnection(DataConnection conn) throws SQLException, GrokConnectException {
+        // the driver's first connection in a JVM loads thousands of AWS SDK classes (~40 s cold)
         if (GrokConnectUtil.isEmpty((String) conn.credentials.parameters.getOrDefault("expires", null)))
-            return ConnectionPool.getConnection(getConnectionString(conn), getProperties(conn), driverClassName);
+            return ConnectionPool.getConnection(getConnectionString(conn), getProperties(conn), driverClassName, 2 * 60 * 1000);
         try {
             Class.forName(driverClassName);
         }
@@ -175,7 +177,16 @@ public class AthenaDataProvider extends JdbcDataProvider {
 
     @Override
     public String castParamValueToSqlDateTime(FuncParam param) {
-        return "TIMESTAMP'" + param.value.toString() + "'";
+        String value = param.value.toString();
+        try {
+            // Datlas sends ISO-8601 instants; Trino's TIMESTAMP literal takes neither 'T' nor a zone
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            value = format.format(javax.xml.bind.DatatypeConverter.parseDateTime(value).getTime());
+        }
+        catch (IllegalArgumentException ignored) {
+        }
+        return "TIMESTAMP '" + escapeSqlString(value) + "'";
     }
 
     @Override
