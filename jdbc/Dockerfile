@@ -101,7 +101,8 @@ WORKDIR ${GROK_CONNECT_DIR}
 # GrokConnect
 EXPOSE 1234
 
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-Xmx4g", "-classpath", "grok_connect.jar:lib/*", "grok_connect.GrokConnect"]
+# Heap from the container's memory limit: a fixed -Xmx4g above a 2Gi limit got the pod OOM-killed before the JVM collected.
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-XX:MaxRAMPercentage=75.0", "-classpath", "grok_connect.jar:lib/*", "grok_connect.GrokConnect"]
 
 ARG BRANCH
 ARG COMMIT_PUBLIC
