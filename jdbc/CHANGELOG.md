@@ -3,6 +3,7 @@
 # 2.8.9
 
 * Fixed: every Athena connection (including "Test") failed since 2.8.0 with `BootstrapMethodError: NoClassDefFoundError: software/amazon/awssdk/services/athenastreaming/AthenaStreamingAsyncClient` — the lean athena-jdbc 3.8.0 jar needs the AthenaStreaming SDK client, which AWS ships only inside `athena-jdbc-3.8.0-with-dependencies.jar`; that package now lives in `lib/athena-jdbc-3.8.0-athenastreaming.jar`, and the image smoke test opens an Athena connection
+* Deprecated: 2.8.0 – 2.8.8 — Athena cannot connect on any of them; upgrade to 2.8.9 (no other behaviour change, every newer Datlas option stays opt-in)
 
 # 2.8.8
 
