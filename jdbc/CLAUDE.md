@@ -546,7 +546,7 @@ capped at 500,000 rows (`MAX_FETCH_SIZE`).
 Default settings (can be overridden):
 
 - **Port:** 1234
-- **Heap:** 4GB (`-Xmx4g`)
+- **Heap:** 75% of the container memory limit in the image (`-XX:MaxRAMPercentage=75.0`); 4GB (`-Xmx4g`) in `grok_connect.sh`
 - **JDBC Drivers:** `lib/` directory
 - **Logging:** Logback (configurable via `logback.xml`)
 
