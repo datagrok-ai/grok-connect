@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.9
+
+* Fixed: every Athena connection (including "Test") failed since 2.8.0 with `BootstrapMethodError: NoClassDefFoundError: software/amazon/awssdk/services/athenastreaming/AthenaStreamingAsyncClient` — the lean athena-jdbc 3.8.0 jar needs the AthenaStreaming SDK client, which AWS ships only inside `athena-jdbc-3.8.0-with-dependencies.jar`; that package now lives in `lib/athena-jdbc-3.8.0-athenastreaming.jar`, and the image smoke test opens an Athena connection
+
 # 2.8.8
 
 * Security: runtime image moved from `datagrok/openjdk:8` (Ubuntu 22.04, JDK 8u302) to a minimal Alpine 3.24 root (musl, busybox, zlib; no apk-tools/OpenSSL) with the Eclipse Temurin 8u504 JRE, which drops every Ubuntu OS finding; mariadb-java-client 3.5.10 → 3.5.11; CI now smoke-tests both images (SQLite native driver, Postgres, UTF-8) before publishing; hadoop-auth's Kerby modules 2.0.3 → 2.1.2 (CVE-2026-57914)
