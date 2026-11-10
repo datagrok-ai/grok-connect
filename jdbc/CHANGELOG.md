@@ -2,8 +2,7 @@
 
 # 2.8.10
 
-* Fixed: queries failed on Datagrok 1.27.x and older with `decoding null: encoder 4 not found` (or `encoder 5`/`encoder 6`) since 2.8.5 — grok_connect wrote the GROK-20761 level-2 column encoders (`string:tokens`, `int:bitPacked`, `int:delta`), which only Datagrok 1.28 decodes. `grok.connect.writerLevel` now defaults to `1`, which writes only encoders every Datagrok release reads; `-Dgrok.connect.writerLevel=2` turns them back on for 1.28+ stands
-* Deprecated: 2.8.5 – 2.8.9 on Datagrok 1.27.x and older — upgrade to 2.8.10, or start them with `JAVA_TOOL_OPTIONS=-Dgrok.connect.writerLevel=1`
+* Fixed: `decoding null: encoder 4 not found` (or 5/6) on Datagrok 1.27.x and older — `grok.connect.writerLevel` now defaults to `1`, so the new encoders that only 1.28+ reads are off
 
 # 2.8.9
 
