@@ -28,11 +28,7 @@
 #        bash grok_connect.sh shell build -q examples/query.json
 #        bash grok_connect.sh shell -q examples/query.json
 #
-DART_SDK="$(which dart)"
-DART_PUB=$(which pub)
-
-
-GROK_SRC="${GROK_SRC:-$(dirname "$0")/../../core}"
+GROK_SRC="${GROK_SRC:-$(dirname "$0")/../..}"
 [ -d "$GROK_SRC" ] && GROK_SRC="$(cd "$GROK_SRC" && pwd)"
 cd "$(dirname "$0")"
 JDBC_DIR=$(pwd)
@@ -61,13 +57,13 @@ else
     if [ "$1" == "test" ]; then
         # Get dart test dependencies
         cd "$GROK_SRC/core/shared/ddt"
-        ${DART_PUB} get
+        dart pub get
 
         cd "$GROK_SRC/core/shared/grok_shared"
-        ${DART_PUB} get
+        dart pub get
 
         cd "$GROK_SRC/core/shared/ddt/bin/serialization_test"
-        ${DART_PUB} get
+        dart pub get
 
         cd "$JDBC_DIR"
 

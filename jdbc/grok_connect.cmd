@@ -28,7 +28,7 @@
 ::
 @echo off
 setlocal
-if not defined GROK_SRC set "GROK_SRC=%~dp0..\..\core"
+if not defined GROK_SRC set "GROK_SRC=%~dp0..\.."
 for %%i in ("%GROK_SRC%") do set "GROK_SRC=%%~fi"
 cd /d "%~dp0"
 set "JDBC_DIR=%CD%"
@@ -53,13 +53,13 @@ if "%1" == "shell" (
     if "%1" == "test" (
         :: Get dart test dependencies
         cd /d "%GROK_SRC%\core\shared\ddt"
-        call pub get
+        call dart pub get
 
         cd /d "%GROK_SRC%\core\shared\grok_shared"
-        call pub get
+        call dart pub get
 
         cd /d "%GROK_SRC%\core\shared\ddt\bin\serialization_test"
-        call pub get
+        call dart pub get
 
         cd /d "%JDBC_DIR%"
 
