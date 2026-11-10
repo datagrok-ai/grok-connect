@@ -13,9 +13,10 @@ public class IntColumn extends AbstractColumn<Integer> {
     public static boolean ADVANCED_ENCODERS =
             Boolean.parseBoolean(System.getProperty("grok.connect.advancedEncoders", "true"));
 
-    // Mirrors Dart's ColumnTypeMeta.writerLevel: 1 writes only the ids every historical reader
-    // decodes (int 1-4, string 0-3), 2 (default) adds int:bitPacked/int:delta/string:tokens.
-    public static int WRITER_LEVEL = Integer.getInteger("grok.connect.writerLevel", 2);
+    // Mirrors Dart's ColumnTypeMeta.writerLevel: 1 (default) writes only the ids every released reader
+    // decodes (int 1-4, string 0-3); 2 adds int:bitPacked/int:delta/string:tokens, which Datagrok reads
+    // only from 1.28 (core 71050a57f8) - 1.27.x and older fail with "decoding <col>: encoder 4|5|6 not found".
+    public static int WRITER_LEVEL = Integer.getInteger("grok.connect.writerLevel", 1);
 
     private int[] data;
 

@@ -3,10 +3,12 @@ package serialization;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Random;
 
 // IntColumn.encode picks the encoder exactly like Dart's IntMeta / getBestEncodingEstimate.
+@ExtendWith(Level2Encoders.class)
 public class IntColumnEncoderSelectionTest {
     private static final int N = IntColumn.None;
 

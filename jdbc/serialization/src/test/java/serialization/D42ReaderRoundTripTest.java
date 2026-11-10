@@ -2,10 +2,12 @@ package serialization;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 // Java writer -> Java reader round-trip coverage for the d42 reader (WO-1).
 // No Docker / no Dart: builds Java DataFrames, serializes with the existing
 // writer, decodes with the new reader, and asserts every cell.
+@ExtendWith(Level2Encoders.class)
 public class D42ReaderRoundTripTest {
 
     // Astral-plane emoji (U+1F600) - UTF-16 surrogate pair, exercises the

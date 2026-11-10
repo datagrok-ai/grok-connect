@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.10
+
+* Fixed: `decoding null: encoder 4 not found` (or 5/6) on Datagrok 1.27.x and older — `grok.connect.writerLevel` now defaults to `1`, so the new encoders that only 1.28+ reads are off
+
 # 2.8.9
 
 * Fixed: every Athena connection (including "Test") failed since 2.8.0 with `BootstrapMethodError: NoClassDefFoundError: software/amazon/awssdk/services/athenastreaming/AthenaStreamingAsyncClient` — the lean athena-jdbc 3.8.0 jar needs the AthenaStreaming SDK client, which AWS ships only inside `athena-jdbc-3.8.0-with-dependencies.jar`; that package now lives in `lib/athena-jdbc-3.8.0-athenastreaming.jar`, and the image smoke test opens an Athena connection

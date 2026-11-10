@@ -2,6 +2,7 @@ package serialization;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +14,7 @@ import serialization.codecs.StringTokens;
 // GROK-20761: Java round-trips of the level-2 codecs (string:tokens 4, int:bitPacked 5,
 // int:delta 6) - the writer halves ported from ddt; cross-language proof is in
 // D42DartFixtureTest via the Dart-written fixtures.
+@ExtendWith(Level2Encoders.class)
 public class StringTokensCodecTest {
 
     private static String pad(long n, int w) {

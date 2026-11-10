@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ import java.util.Random;
 // automatically) with the Dart reader. Each fixture is
 // also round-tripped through the Java reader here. Serialization is deterministic; the
 // committed goldens are compared byte-for-byte and only rewritten with -Dd42.regenerate=true.
+@ExtendWith(Level2Encoders.class)
 public class D42JavaFixtureWriterTest {
     private static final int N = IntColumn.None;
     private static final String EMOJI = "\uD83D\uDE00x";
