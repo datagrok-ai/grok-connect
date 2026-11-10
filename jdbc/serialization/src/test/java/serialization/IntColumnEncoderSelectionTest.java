@@ -2,28 +2,19 @@ package serialization;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Random;
 
 // IntColumn.encode picks the encoder exactly like Dart's IntMeta / getBestEncodingEstimate.
+@ExtendWith(Level2Encoders.class)
 public class IntColumnEncoderSelectionTest {
     private static final int N = IntColumn.None;
-
-    // Covers the level-2 encoders too, which are off by default (Datagrok 1.27.x and older cannot read them).
-    private int savedWriterLevel;
-
-    @BeforeEach
-    public void enableLevel2Encoders() {
-        savedWriterLevel = IntColumn.WRITER_LEVEL;
-        IntColumn.WRITER_LEVEL = 2;
-    }
 
     @AfterEach
     public void restoreSwitch() {
         IntColumn.ADVANCED_ENCODERS = true;
-        IntColumn.WRITER_LEVEL = savedWriterLevel;
     }
 
     static byte[] encode(Column<?> col) {

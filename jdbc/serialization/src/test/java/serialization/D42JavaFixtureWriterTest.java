@@ -4,9 +4,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -23,21 +22,8 @@ import java.util.Random;
 // automatically) with the Dart reader. Each fixture is
 // also round-tripped through the Java reader here. Serialization is deterministic; the
 // committed goldens are compared byte-for-byte and only rewritten with -Dd42.regenerate=true.
+@ExtendWith(Level2Encoders.class)
 public class D42JavaFixtureWriterTest {
-
-    // These tests cover the level-2 encoders, which are off by default (Datagrok 1.27.x and older cannot read them).
-    private int savedWriterLevel;
-
-    @BeforeEach
-    public void enableLevel2Encoders() {
-        savedWriterLevel = IntColumn.WRITER_LEVEL;
-        IntColumn.WRITER_LEVEL = 2;
-    }
-
-    @AfterEach
-    public void restoreWriterLevel() {
-        IntColumn.WRITER_LEVEL = savedWriterLevel;
-    }
     private static final int N = IntColumn.None;
     private static final String EMOJI = "\uD83D\uDE00x";
     private static final String CJK = "\u65E5\u672C\u8A9E";

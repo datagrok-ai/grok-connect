@@ -1,9 +1,8 @@
 package serialization;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,21 +14,8 @@ import serialization.codecs.StringTokens;
 // GROK-20761: Java round-trips of the level-2 codecs (string:tokens 4, int:bitPacked 5,
 // int:delta 6) - the writer halves ported from ddt; cross-language proof is in
 // D42DartFixtureTest via the Dart-written fixtures.
+@ExtendWith(Level2Encoders.class)
 public class StringTokensCodecTest {
-
-    // These tests cover the level-2 encoders, which are off by default (Datagrok 1.27.x and older cannot read them).
-    private int savedWriterLevel;
-
-    @BeforeEach
-    public void enableLevel2Encoders() {
-        savedWriterLevel = IntColumn.WRITER_LEVEL;
-        IntColumn.WRITER_LEVEL = 2;
-    }
-
-    @AfterEach
-    public void restoreWriterLevel() {
-        IntColumn.WRITER_LEVEL = savedWriterLevel;
-    }
 
     private static String pad(long n, int w) {
         StringBuilder s = new StringBuilder(Long.toString(n));
