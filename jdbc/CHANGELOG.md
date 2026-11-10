@@ -1,5 +1,17 @@
 # Grok Connect changelog
 
+# 2.8.10
+
+* Fixed: `decoding null: encoder 4 not found` (or 5/6) on Datagrok 1.27.x and older — `grok.connect.writerLevel` now defaults to `1`, so the new encoders that only 1.28+ reads are off
+
+# 2.8.9
+
+* Fixed: every Athena connection (including "Test") failed since 2.8.0 with `BootstrapMethodError: NoClassDefFoundError: software/amazon/awssdk/services/athenastreaming/AthenaStreamingAsyncClient` — the lean athena-jdbc 3.8.0 jar needs the AthenaStreaming SDK client, which AWS ships only inside `athena-jdbc-3.8.0-with-dependencies.jar`; that package now lives in `lib/athena-jdbc-3.8.0-athenastreaming.jar`, and the image smoke test opens an Athena connection
+* Fixed: Athena datetime parameters and patterns (e.g. `before 1/1/2022`) failed with `INVALID_LITERAL` — they are now sent as Trino `TIMESTAMP 'yyyy-MM-dd HH:mm:ss.SSS'` literals in UTC
+* Fixed: the first Athena query after a grok_connect restart timed out — the driver's first connection loads the AWS SDK (~40 s cold), so Athena pools now wait up to 2 minutes for a connection
+* Security: the Athena secret key no longer appears in connection pool names, logs and pool-timeout error messages
+* Deprecated: 2.8.0 – 2.8.8 — Athena cannot connect on any of them; upgrade to 2.8.9 (no other behaviour change, every newer Datlas option stays opt-in)
+
 # 2.8.8
 
 * Security: runtime image moved from `datagrok/openjdk:8` (Ubuntu 22.04, JDK 8u302) to a minimal Alpine 3.24 root (musl, busybox, zlib; no apk-tools/OpenSSL) with the Eclipse Temurin 8u504 JRE, which drops every Ubuntu OS finding; mariadb-java-client 3.5.10 → 3.5.11; CI now smoke-tests both images (SQLite native driver, Postgres, UTF-8) before publishing; hadoop-auth's Kerby modules 2.0.3 → 2.1.2 (CVE-2026-57914)

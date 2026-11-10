@@ -26,12 +26,17 @@ public class ConnectionPool {
 
     public static Connection getConnection(String url, java.util.Properties properties, String driverClassName)
             throws GrokConnectException {
+        return getConnection(url, properties, driverClassName, 30 * 1000);
+    }
+
+    public static Connection getConnection(String url, java.util.Properties properties, String driverClassName,
+                                           long connectionTimeoutMs) throws GrokConnectException {
         LOGGER.debug("getConnection was called for driver {} with url {}", driverClassName, GrokConnectUtil.maskCredentials(url));
         if (GrokConnectUtil.isEmpty(url) || properties == null || GrokConnectUtil.isEmpty(driverClassName))
             throw new GrokConnectException("Connection parameters are null");
         String key = url + properties + driverClassName;
         try {
-            HikariDataSource ds = getOrCreateDataSource(key, url, properties, driverClassName);
+            HikariDataSource ds = getOrCreateDataSource(key, url, properties, driverClassName, connectionTimeoutMs);
             return ds.getConnection();
         } catch (HikariPool.PoolInitializationException e) {
             HikariDataSource pool = connectionPool.remove(key);
@@ -63,12 +68,13 @@ public class ConnectionPool {
         }
     }
 
-    private static HikariDataSource getOrCreateDataSource(String key, String url, Properties properties, String driverClassName) {
+    private static HikariDataSource getOrCreateDataSource(String key, String url, Properties properties, String driverClassName,
+                                                          long connectionTimeoutMs) {
         startEvictionIfNeeded();
         HikariDataSource ds = connectionPool.get(key);
         if (ds != null)
             return ds;
-        HikariDataSource newDs = getDataSource(url, properties, driverClassName);
+        HikariDataSource newDs = getDataSource(url, properties, driverClassName, connectionTimeoutMs);
         HikariDataSource existing = connectionPool.putIfAbsent(key, newDs);
         if (existing != null) {
             newDs.close();
@@ -111,7 +117,8 @@ public class ConnectionPool {
         return new HikariDataSource(config);
     }
 
-    private static HikariDataSource getDataSource(String url, Properties properties, String driverClassName) {
+    private static HikariDataSource getDataSource(String url, Properties properties, String driverClassName,
+                                                  long connectionTimeoutMs) {
         String maskedUrl = GrokConnectUtil.maskCredentials(url);
         LOGGER.info("Initializing pool for driver {} with url {}", driverClassName, maskedUrl);
         Properties propertiesWithoutPass = new Properties();
@@ -127,6 +134,10 @@ public class ConnectionPool {
         propertiesWithoutPass.remove(DbCredentials.OAUTH2_SECRET);
         propertiesWithoutPass.remove(DbCredentials.OAUTH2_CLIENT_ID);
         propertiesWithoutPass.remove(DbCredentials.TOKEN);
+        // Athena passes its AWS keys as driver properties under these names
+        propertiesWithoutPass.remove("User");
+        propertiesWithoutPass.remove("Password");
+        propertiesWithoutPass.remove("SessionToken");
 
         String alphanumeric = "[^A-Za-z\\d./|=]";
         String poolName = "Host - " + maskedUrl.replaceAll("[:=]", "|").replaceAll(alphanumeric, "") +
@@ -140,6 +151,7 @@ public class ConnectionPool {
             config.setDriverClassName(driverClassName);
         }
         config.setDataSourceProperties(properties);
+        config.setConnectionTimeout(connectionTimeoutMs);
         config.setMaximumPoolSize(SettingsManager.getInstance().getSettings().connectionPoolMaximumPoolSize);
         config.setMinimumIdle(0);
         config.setIdleTimeout(SettingsManager.getInstance().getSettings().connectionPoolIdleTimeout);

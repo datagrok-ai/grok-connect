@@ -349,9 +349,9 @@ on the non-streaming `/query` path):
 | `grok.connect.advancedEncoders`         | `true`  | `IntColumn` writes `int:raw` (id 1) only — also string category indices, the bigint int mode and, in effect, datetime components |
 | `grok.connect.dateTimeComponentEncoder` | `true`  | `DateTimeColumn` writes `dateTime:microseconds` (id 3) only                                                                      |
 | `grok.connect.pipelineFetch`            | `true`  | one pool task per chunk does fetch + serialize instead of the two-stage pipeline (same bytes on the wire)                        |
+| `grok.connect.writerLevel`              | `1`     | `2` also writes `int:bitPacked` (5), `int:delta` (6) and `string:tokens` (4), which only Datagrok 1.28+ reads                   |
 
-The encoder flags exist to roll a stand back to the pre-optimization wire bytes without a rebuild;
-no reader needs them (every id was already decoded everywhere, `core/docs/D42_BINARY_FORMAT.md`).
+The encoder flags exist to roll a stand back to the pre-optimization wire bytes without a rebuild.
 `pipelineFetch` changes only task scheduling, never the bytes.
 
 ## Directory Structure
@@ -546,7 +546,7 @@ capped at 500,000 rows (`MAX_FETCH_SIZE`).
 Default settings (can be overridden):
 
 - **Port:** 1234
-- **Heap:** 4GB (`-Xmx4g`)
+- **Heap:** 75% of the container memory limit in the image (`-XX:MaxRAMPercentage=75.0`); 4GB (`-Xmx4g`) in `grok_connect.sh`
 - **JDBC Drivers:** `lib/` directory
 - **Logging:** Logback (configurable via `logback.xml`)
 

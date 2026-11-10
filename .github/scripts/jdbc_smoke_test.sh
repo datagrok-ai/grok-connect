@@ -94,6 +94,27 @@ JS
   docker exec "$name" java -cp grok_connect.jar jdk.nashorn.tools.Shell /tmp/sqlite_smoke.js \
     || fail "sqlite: native driver query failed"
 
+  # Athena v3 needs SDK classes Maven does not publish (athenastreaming); without them every
+  # connection dies in ConnectionConfiguration with a linkage error. Fake keys against a closed
+  # local port must fail on the network instead.
+  docker exec -i "$name" sh -c 'cat > /tmp/athena_smoke.js' <<'JS'
+var p = new java.util.Properties();
+p.put("User", "AKIASMOKETEST");
+p.put("Password", "smoke");
+p.put("OutputLocation", "s3://smoke/results/");
+p.put("AthenaEndpoint", "https://127.0.0.1:9");
+try {
+  java.sql.DriverManager.getConnection("jdbc:athena://Region=us-east-1;", p).close();
+} catch (e) {
+  var t = e.javaException || e;
+  print("athena: " + t);
+  for (var c = t; c != null; c = c.getCause())
+    if (c instanceof java.lang.LinkageError || c instanceof java.lang.ClassNotFoundException) java.lang.System.exit(1);
+}
+JS
+  docker exec "$name" java -cp 'grok_connect.jar:lib/*' jdk.nashorn.tools.Shell /tmp/athena_smoke.js \
+    || fail "athena: driver classes missing from the image"
+
   query postgres '{"id":"smoke-postgres","options":{},"func":{"#type":"DataQuery","name":"pg","params":[],
     "query":"select g as id, md5(g::text) as label, now() as ts from generate_series(1, 1000) g",
     "connection":{"dataSource":"Postgres","parameters":{"server":"localhost","port":5432,"db":"smoke"},
