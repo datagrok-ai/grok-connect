@@ -1,6 +1,8 @@
 package serialization;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -14,6 +16,20 @@ import serialization.codecs.StringTokens;
 // int:delta 6) - the writer halves ported from ddt; cross-language proof is in
 // D42DartFixtureTest via the Dart-written fixtures.
 public class StringTokensCodecTest {
+
+    // These tests cover the level-2 encoders, which are off by default (Datagrok 1.27.x and older cannot read them).
+    private int savedWriterLevel;
+
+    @BeforeEach
+    public void enableLevel2Encoders() {
+        savedWriterLevel = IntColumn.WRITER_LEVEL;
+        IntColumn.WRITER_LEVEL = 2;
+    }
+
+    @AfterEach
+    public void restoreWriterLevel() {
+        IntColumn.WRITER_LEVEL = savedWriterLevel;
+    }
 
     private static String pad(long n, int w) {
         StringBuilder s = new StringBuilder(Long.toString(n));

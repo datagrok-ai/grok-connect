@@ -1,12 +1,28 @@
 package serialization;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 // Java writer -> Java reader round-trip coverage for the d42 reader (WO-1).
 // No Docker / no Dart: builds Java DataFrames, serializes with the existing
 // writer, decodes with the new reader, and asserts every cell.
 public class D42ReaderRoundTripTest {
+
+    // These tests cover the level-2 encoders, which are off by default (Datagrok 1.27.x and older cannot read them).
+    private int savedWriterLevel;
+
+    @BeforeEach
+    public void enableLevel2Encoders() {
+        savedWriterLevel = IntColumn.WRITER_LEVEL;
+        IntColumn.WRITER_LEVEL = 2;
+    }
+
+    @AfterEach
+    public void restoreWriterLevel() {
+        IntColumn.WRITER_LEVEL = savedWriterLevel;
+    }
 
     // Astral-plane emoji (U+1F600) - UTF-16 surrogate pair, exercises the
     // UTF-16-code-unit string-list slicing.
