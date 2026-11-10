@@ -47,7 +47,7 @@ blob tail carries a minimal fixed JSON), so an unchanged format leaves the tree 
 diff in `data/formats/d42/dart` after regeneration is the loud signal that the format or the ddt cost model moved
 — review it, then re-run `D42DartFixtureTest`.
 
-Core keeps its own copies in `data/formats/d42/dart` (these) and `data/formats/d42/java` (the Java-written
+The data repo keeps its own copies in `data/formats/d42/dart` (these) and `data/formats/d42/java` (the Java-written
 `d42-java` goldens); they are not synced with this repository automatically.
 
 Fixtures are kept under 100 KB each (they live in git).
