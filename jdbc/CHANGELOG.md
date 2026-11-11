@@ -2,7 +2,7 @@
 
 # 2.8.11
 
-* Fixed: SSL connections (e.g. Postgres with `ssl` on) failed since 2.8.8 with `Connection is not available, request timed out after 30000ms` — the Alpine runtime lacked `libgcc`, so the JRE's `libsunec.so` did not load and Java had no EC crypto (no ECDHE cipher suites), which TLS servers reject at the handshake; the runtime root now installs `libgcc`
+* Fixed: SSL connections timed out since 2.8.8 — the Alpine image lacked `libgcc`, so Java had no EC crypto for TLS
 
 # 2.8.10
 
