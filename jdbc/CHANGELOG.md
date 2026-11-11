@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.11
+
+* Fixed: SSL connections (e.g. Postgres with `ssl` on) failed since 2.8.8 with `Connection is not available, request timed out after 30000ms` — the Alpine runtime lacked `libgcc`, so the JRE's `libsunec.so` did not load and Java had no EC crypto (no ECDHE cipher suites), which TLS servers reject at the handshake; the runtime root now installs `libgcc`
+
 # 2.8.10
 
 * Fixed: `decoding null: encoder 4 not found` (or 5/6) on Datagrok 1.27.x and older — `grok.connect.writerLevel` now defaults to `1`, so the new encoders that only 1.28+ reads are off

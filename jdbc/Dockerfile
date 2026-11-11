@@ -63,7 +63,7 @@ RUN set -ex ; \
     apk add --no-cache --root /rootfs --initdb \
       --keys-dir /etc/apk/keys --repositories-file /etc/apk/repositories \
       alpine-baselayout alpine-baselayout-data alpine-release \
-      busybox busybox-binsh musl zlib
+      busybox busybox-binsh musl zlib libgcc
 
 FROM eclipse-temurin:8u504-b01-jre-alpine-3.24 as jre
 
