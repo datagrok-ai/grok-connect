@@ -558,11 +558,53 @@ public class DatabricksProvider extends JdbcDataProvider {
     }
 
     @Override
-    public DataFrame getForeignKeys(DataConnection conn, String schema) {
-        // Return empty df since foreign keys are not supported
-        return DataFrame.fromColumns(new StringColumn("table_schema"),
+    public DataFrame getForeignKeys(DataConnection conn, String schema) throws GrokConnectException {
+        DataFrame result = DataFrame.fromColumns(new StringColumn("table_schema"),
                 new StringColumn("constraint_name"), new StringColumn("table_name"),
                 new StringColumn("column_name"), new StringColumn("foreign_table_name"), new StringColumn("foreign_column_name"));
+        boolean bySchema = GrokConnectUtil.isNotEmpty(schema);
+        try (Connection db = getConnection(conn)) {
+            String infoSchemaPath = addBrackets(getCatalog(conn, db)) + ".information_schema";
+            try (PreparedStatement ps = db.prepareStatement(getForeignKeysSql(infoSchemaPath, bySchema))) {
+                if (bySchema)
+                    ps.setString(1, schema);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next())
+                        result.addRow(rs.getString(1), rs.getString(2), rs.getString(3),
+                                rs.getString(4), rs.getString(5), rs.getString(6));
+                }
+            } catch (SQLException e) {
+                // The legacy Hive metastore has no constraint views: no keys, and the schema is still browsed
+                logger.debug("Foreign keys query failed with path {}: {}", infoSchemaPath,
+                        simplifyDatabricksError(e.getMessage()));
+            }
+        } catch (SQLException e) {
+            throw new GrokConnectException(simplifyDatabricksError(e.getMessage()));
+        }
+        return result;
+    }
+
+    /**
+     * The foreign keys declared in Unity Catalog, a row per key column with the column of the primary or
+     * unique key it points at. Only keys within one schema: the result has no column for another schema
+     * or catalog, and its reader finds the target by table name in the schema of the referencing table.
+     */
+    static String getForeignKeysSql(String infoSchemaPath, boolean bySchema) {
+        return "SELECT fk.table_schema, fk.constraint_name, fk.table_name, fk.column_name, " +
+                "pk.table_name AS foreign_table_name, pk.column_name AS foreign_column_name " +
+                "FROM " + infoSchemaPath + ".referential_constraints rc " +
+                "JOIN " + infoSchemaPath + ".key_column_usage fk " +
+                "  ON fk.constraint_catalog = rc.constraint_catalog " +
+                " AND fk.constraint_schema = rc.constraint_schema " +
+                " AND fk.constraint_name = rc.constraint_name " +
+                "JOIN " + infoSchemaPath + ".key_column_usage pk " +
+                "  ON pk.constraint_catalog = rc.unique_constraint_catalog " +
+                " AND pk.constraint_schema = rc.unique_constraint_schema " +
+                " AND pk.constraint_name = rc.unique_constraint_name " +
+                " AND pk.ordinal_position = fk.position_in_unique_constraint " +
+                "WHERE pk.table_catalog = fk.table_catalog AND pk.table_schema = fk.table_schema " +
+                (bySchema ? "AND LOWER(fk.table_schema) = LOWER(?) " : "") +
+                "ORDER BY fk.table_schema, fk.table_name, fk.constraint_name, fk.ordinal_position";
     }
 
     public static String simplifyDatabricksError(String msg) {
