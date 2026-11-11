@@ -1,5 +1,9 @@
 # Grok Connect changelog
 
+# 2.8.11
+
+* Fixed: SSL connections timed out since 2.8.8 — the Alpine image lacked `libgcc`, so Java had no EC crypto for TLS
+
 # 2.8.10
 
 * Fixed: `decoding null: encoder 4 not found` (or 5/6) on Datagrok 1.27.x and older — `grok.connect.writerLevel` now defaults to `1`, so the new encoders that only 1.28+ reads are off
