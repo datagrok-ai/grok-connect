@@ -3,6 +3,7 @@ package grok_connect.providers;
 import grok_connect.connectors_info.DbCredentials;
 import grok_connect.connectors_info.FuncCall;
 import grok_connect.providers.utils.NamedArgumentConverter;
+import grok_connect.providers.utils.FuncCallBuilder;
 import grok_connect.providers.utils.Provider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -209,6 +210,20 @@ class PostgresDataProviderTest extends ContainerizedProviderBaseTest {
         funcCall.func.connection = connection;
         DataFrame actual = Assertions.assertDoesNotThrow(() -> provider.execute(funcCall));
         Assertions.assertTrue(dataFrameComparator.isDataFramesEqual(expected, actual));
+    }
+
+    @DisplayName("String pattern on an array column")
+    @Test
+    public void stringPattern_arrayColumn_ok() {
+        FuncCall funcCall = FuncCallBuilder.getBuilder()
+                .addQuery("--input: string p = \"contains meeting\" {pattern: string}\n"
+                        + "SELECT name FROM sal_emp WHERE @p(schedule)")
+                .addFuncParam("string", "", "p", "contains meeting", "string")
+                .addFuncCallOptionsPattern("p", "contains meeting", "contains", null, null, "meeting")
+                .addConnection(connection)
+                .build();
+        DataFrame actual = Assertions.assertDoesNotThrow(() -> provider.execute(funcCall));
+        Assertions.assertEquals(2, actual.rowCount);
     }
 
     @DisplayName("Parameters support for datetime")
