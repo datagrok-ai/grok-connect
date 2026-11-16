@@ -256,6 +256,11 @@ public class PostgresDataProvider extends JdbcDataProvider {
     }
 
     @Override
+    protected String stringPatternColumn(String columnName) {
+        return "CAST(" + columnName + " AS TEXT)";
+    }
+
+    @Override
     protected String getRegexQuery(String columnName, String regexExpression) {
         return String.format("%s ~ '%s'", columnName, regexExpression);
     }

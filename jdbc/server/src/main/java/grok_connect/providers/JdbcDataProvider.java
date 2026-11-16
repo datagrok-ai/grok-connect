@@ -761,7 +761,8 @@ public abstract class JdbcDataProvider extends DataProvider {
         }
 
         String type = "string";
-        String _query = "(LOWER(" + matcher.colName + ") LIKE @" + paramName + ")";
+        String column = stringPatternColumn(matcher.colName);
+        String _query = "(LOWER(" + column + ") LIKE @" + paramName + ")";
         List<Object> values = matcher.values;
         String value = null;
         if (values.size() > 0)
@@ -785,7 +786,7 @@ public abstract class JdbcDataProvider extends DataProvider {
                 result.params.add(new FuncParam(type, paramName, "%" + value));
                 break;
             case PatternMatcher.REGEXP:
-                result.query = getRegexQuery(matcher.colName, value);
+                result.query = getRegexQuery(column, value);
                 result.params.add(new FuncParam(type, paramName, value));
                 break;
             case PatternMatcher.IN:
@@ -803,6 +804,10 @@ public abstract class JdbcDataProvider extends DataProvider {
         }
 
         return result;
+    }
+
+    protected String stringPatternColumn(String columnName) {
+        return columnName;
     }
 
     protected String getRegexQuery(String columnName, String regexExpression) {
