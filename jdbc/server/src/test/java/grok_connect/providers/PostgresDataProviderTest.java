@@ -216,8 +216,7 @@ class PostgresDataProviderTest extends ContainerizedProviderBaseTest {
     @Test
     public void stringPattern_arrayColumn_ok() {
         FuncCall funcCall = FuncCallBuilder.getBuilder()
-                .addQuery("--input: string p = \"contains meeting\" {pattern: string}\n"
-                        + "SELECT name FROM sal_emp WHERE @p(schedule)")
+                .addQuery("SELECT name FROM sal_emp WHERE @p(schedule)")
                 .addFuncParam("string", "", "p", "contains meeting", "string")
                 .addFuncCallOptionsPattern("p", "contains meeting", "contains", null, null, "meeting")
                 .addConnection(connection)
