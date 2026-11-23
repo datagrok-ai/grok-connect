@@ -51,12 +51,12 @@ RUN go get \
         github.com/apache/thrift@v0.24.0 \
         github.com/klauspost/compress@v1.19.1 \
         google.golang.org/grpc@v1.83.2 \
-        go.opentelemetry.io/otel@v1.45.0 \
-        go.opentelemetry.io/otel/sdk@v1.45.0 \
-        go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.45.0 \
-        go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.45.0 \
-        go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.45.0 \
-        go.opentelemetry.io/otel/exporters/stdout/stdouttrace@v1.45.0 \
+        go.opentelemetry.io/otel@v1.47.0 \
+        go.opentelemetry.io/otel/sdk@v1.47.0 \
+        go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.47.0 \
+        go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.47.0 \
+        go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.47.0 \
+        go.opentelemetry.io/otel/exporters/stdout/stdouttrace@v1.47.0 \
         github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream@v1.7.16 \
         github.com/aws/aws-sdk-go-v2/service/s3@v1.106.4 \
     && go mod tidy

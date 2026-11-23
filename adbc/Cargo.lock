@@ -949,7 +949,7 @@ dependencies = [
 
 [[package]]
 name = "grok_connect_adbc"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "adbc_core",
  "adbc_driver_manager",
