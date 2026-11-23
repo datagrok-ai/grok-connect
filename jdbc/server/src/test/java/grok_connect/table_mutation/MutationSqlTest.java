@@ -133,7 +133,7 @@ public class MutationSqlTest {
         Assertions.assertEquals(lines(
                 "DELETE FROM \"public\".\"orders\"",
                 "WHERE",
-                "  ((LOWER(\"status\") LIKE @status))"),
+                "  ((LOWER(CAST(\"status\" AS TEXT)) LIKE @status))"),
                 postgres.deleteSql(m, params));
         Assertions.assertEquals(1, params.size());
         Assertions.assertEquals("%obsolete%", params.get(0).value);
