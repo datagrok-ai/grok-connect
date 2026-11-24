@@ -1,5 +1,10 @@
 # Grok Connect changelog
 
+# 2.8.12
+
+* Fixed: a string pattern on an array or `jsonb` column failed with `function lower(...) does not exist` ([core#1525](https://github.com/datagrok-ai/core/issues/1525))
+* Security: removed the stale `lib/json-20240303.jar` (CVE-2026-59171) — `org.json` 20260719 is already part of the server jar, which is first on the classpath
+
 # 2.8.11
 
 * Fixed: SSL connections timed out since 2.8.8 — the Alpine image lacked `libgcc`, so Java had no EC crypto for TLS
