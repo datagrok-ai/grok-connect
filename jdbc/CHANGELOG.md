@@ -1,5 +1,10 @@
 # Grok Connect changelog
 
+# v.next
+
+* Fixed: Hive and Hive2 (a Spark Thrift server too) quoted names with SQL Server brackets, so a table opened from the Browse tree failed with `Syntax error at or near '['`; they now use backticks
+* Fixed: browsing a Hive or Hive2 schema failed with `Method not supported` — the driver has no foreign-key metadata, and Hive declares none; the provider now answers with no foreign keys
+
 # 2.8.12
 
 * Fixed: a string pattern on an array or `jsonb` column failed with `function lower(...) does not exist` ([core#1525](https://github.com/datagrok-ai/core/issues/1525))

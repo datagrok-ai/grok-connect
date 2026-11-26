@@ -28,6 +28,8 @@ public class HiveDataProvider extends JdbcDataProvider {
         descriptor.connectionTemplate.add(DbCredentials.getSsl());
         descriptor.credentialsTemplate = DbCredentials.getDbCredentialsTemplate();
         descriptor.canBrowseSchema = true;
+        // HiveQL and Spark SQL quote names with backticks; the default [] is SQL Server's and fails to parse
+        descriptor.nameBrackets = "`";
         descriptor.typesMap = new HashMap<String, String>() {{
             put("smallint", Types.INT);
             put("tinyint", Types.INT);
@@ -104,6 +106,14 @@ public class HiveDataProvider extends JdbcDataProvider {
         } catch (SQLException e) {
             throw new GrokConnectException(e);
         }
+    }
+
+    /** Hive and Spark declare no foreign keys, and their JDBC drivers answer getExportedKeys with "Method not supported" */
+    @Override
+    public DataFrame getForeignKeys(DataConnection conn, String schema) {
+        return DataFrame.fromColumns(new StringColumn("table_schema"), new StringColumn("constraint_name"),
+                new StringColumn("table_name"), new StringColumn("column_name"), new StringColumn("foreign_table_name"),
+                new StringColumn("foreign_column_name"));
     }
 
     @Override
